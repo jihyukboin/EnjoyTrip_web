@@ -1,6 +1,10 @@
 import { initializeSiteHeader } from './components/site-header.js';
 
 initializeSiteHeader();
+if (document.querySelector('[data-flight-records]')) {
+  const { initializeFlightRecords } = await import('./components/flight/records.js');
+  await initializeFlightRecords();
+}
 
 if (document.querySelector('[data-notice-banner]')) {
   const { initializeNoticeBanner } = await import('./components/notice-banner.js');

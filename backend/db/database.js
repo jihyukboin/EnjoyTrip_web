@@ -97,7 +97,14 @@ export function openDatabase(path) {
       });
       version = 8;
     }
-    if (version !== 8) throw new Error('Unsupported database schema version.');
+    if (version === 8) {
+      transaction(db, () => {
+        db.exec(readSql('flight-records.sql'));
+        db.exec('PRAGMA user_version = 9');
+      });
+      version = 9;
+    }
+    if (version !== 9) throw new Error('Unsupported database schema version.');
     return db;
   } catch (error) {
     db.close();

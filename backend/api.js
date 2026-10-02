@@ -14,6 +14,7 @@ import { createNoticeRoutes } from './notices/routes.js';
 import { createApiRouter } from './http/api-router.js';
 import { createNearbyService } from './nearby/service.js';
 import { createNearbyRoutes } from './nearby/routes.js';
+import { createFlightRoutes } from './flights/routes.js';
 
 export function createApi({ db, config, now = Date.now, rateLimit, nearby = createNearbyService({ key: config.tourApiServiceKey, now }) }) {
   const members = createMemberRepository(db);
@@ -27,7 +28,8 @@ export function createApi({ db, config, now = Date.now, rateLimit, nearby = crea
     ...createPostRoutes({ posts, auth: authService }),
     ...createAdminRoutes({ admin }),
     ...createNoticeRoutes({ notices }),
-    ...createNearbyRoutes({ nearby })
+    ...createNearbyRoutes({ nearby }),
+    ...createFlightRoutes({ db, auth: authService, posts, now })
   ]);
   return createApiRouter({ config, members: memberService, auth: authService, now, rateLimit, extraRoutes });
 }

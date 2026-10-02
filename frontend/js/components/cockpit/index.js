@@ -15,6 +15,7 @@ import { loadTrip } from './trip.js';
 import { createJourney } from './journey.js';
 import { distanceMeters, bearingDegrees } from './navigation.js';
 import { formatDistance } from './format.js';
+import { createFlightSession } from './flight-session.js';
 
 const MAX_FRAME_SECONDS = 0.1;
 
@@ -47,10 +48,11 @@ export async function initializeCockpit() {
   cockpit.querySelector('#boarding-description').textContent = `${route.post.origin} → ${route.post.destination}. 탑승 후 3초 카운트다운 뒤 출발합니다.`;
   cockpit.querySelector('[data-flight-start]').disabled = false;
   let nearby;
+  let flightSession;
   const map = initializeFlightMap(route, place => nearby?.select(place));
   const journey = createJourney(cockpit, route);
   let paused = false;
-  const available = () => boarding.hasBoarded() && !boarding.isOpen() && !journey.isOpen() && !paused && !document.hidden && map.isReady();
+  const available = () => boarding.hasBoarded() && !boarding.isOpen() && !flightSession?.isOpen() && !paused && !document.hidden && map.isReady();
   const isFlying = () => available() && journey.started();
   const input = createInput(cockpit, isFlying);
   const pauseBanner = cockpit.querySelector('[data-pause-banner]');
@@ -79,14 +81,25 @@ export async function initializeCockpit() {
   cockpit.querySelector('[data-flight-resume]').addEventListener('click', () => setPaused(false));
   window.addEventListener('blur', () => { if (journey.started()) setPaused(true); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && journey.started()) setPaused(true); });
-  nearby = createNearby(cockpit.querySelector('[data-nearby]'), map.setPlaces, place => {
+  nearby = createNearby(cockpit.querySelector('[data-nearby]'), places => {
+    map.setPlaces(places);
+    flightSession?.setPlaces(places);
+  }, place => {
     if (place) setPaused(true);
     map.focusPlace(place);
     cockpit.dataset.exploring = String(Boolean(place));
     pauseMessage.textContent = place ? `${place.name} · 둘러보는 동안 비행이 멈춥니다` : '일시정지 중';
-    if (place) cockpit.querySelector('.cockpit__windshield').scrollIntoView({ block: 'nearest' });
+    if (place) {
+      cockpit.querySelector('.cockpit__windshield').scrollIntoView({ block: 'nearest' });
+      flightSession?.offerPlace(place);
+    }
   });
   const model = createFlightModel({ ...MOCK_FLIGHT, position: route.start, heading: route.heading });
+  flightSession = createFlightSession(cockpit, route, {
+    isActive: isFlying,
+    canInteract: () => boarding.hasBoarded() && !boarding.isOpen() && map.isReady(),
+    pause: () => setPaused(true), resume: () => setPaused(false)
+  });
   const views = [
     createHud(cockpit.querySelector('[data-hud]'), distanceMeters(route.start, route.end)),
     ...mount(cockpit.querySelector('[data-yoke]'), [createYoke()], 'prepend'),
@@ -117,6 +130,7 @@ export async function initializeCockpit() {
     }
     else input.reset();
     map.update(model.state, now);
+    flightSession.update(model.state, dt);
     const targetHeading = bearingDegrees(model.state.position, route.end);
     const remaining = distanceMeters(model.state.position, route.end);
     const distanceText = `도착까지 ${formatDistance(remaining / 1000)}`;
@@ -125,7 +139,7 @@ export async function initializeCockpit() {
     const directionText = remaining <= 100 ? '목적지 도착' : Math.abs(turn) < 5 ? '↑ 목적지 방향으로 비행 중' : `${turn > 0 ? '→ 오른쪽' : '← 왼쪽'} ${Math.round(Math.abs(turn))}° 선회하면 목적지 방향`;
     if (destinationDirection.textContent !== directionText) destinationDirection.textContent = directionText;
     const label = !map.isReady() ? '지도 연결 대기' : boarding.isOpen() ? '탑승 대기'
-      : journey.isOpen() ? '도착 확인' : paused || document.hidden ? '일시정지'
+      : paused || document.hidden ? '일시정지'
       : !journey.started() ? '출발 준비' : '비행 중';
     if (label !== previousStatus) {
       status.textContent = label;

@@ -22,7 +22,7 @@
           <button class="cockpit__action" type="button" data-map-expand aria-pressed="false">지도 넓게</button>
           <button class="cockpit__action" type="button" data-flight-pause aria-pressed="false">일시정지</button>
           <button class="cockpit__action" type="button" data-boarding-open>조작 안내</button>
-          <a class="cockpit__action cockpit__action--exit" href="/flight">나가기 <span aria-hidden="true">↗</span></a>
+          <button class="cockpit__action cockpit__action--exit" type="button" data-flight-end>비행 종료 <span aria-hidden="true">↗</span></button>
         </nav>
       </header>
 
@@ -35,6 +35,7 @@
         <div class="hud" data-hud aria-hidden="true"></div>
         <div class="flight-map__navigation"><strong data-destination-distance></strong><span data-destination-direction></span></div>
         <div class="flight-map__pause" data-pause-banner hidden><span data-pause-message>일시정지 중</span><button type="button" data-flight-resume>비행 재개</button></div>
+        <div class="flight-map__waypoint" data-waypoint-near hidden><button type="button" data-waypoint-offer>Space · 경유지 추가</button></div>
         <div class="flight-map__countdown" data-flight-countdown hidden role="status" aria-label="출발 카운트다운"></div>
         <p class="flight-map__warning" data-route-warning hidden role="status"></p>
         <div class="cockpit__map-caption"><span data-flight-origin>출발지를 확인하고 있습니다.</span><span>북쪽 기준 · 항공뷰</span></div>
@@ -104,6 +105,7 @@
             </div>
           </header>
           <div class="mfd__body">
+            <details class="flight-waypoints"><summary data-waypoint-count>경유지 0/5</summary><ol data-waypoints></ol></details>
             <p class="mfd__hint" data-nearby-hint>장소를 누르면 멈춰서 지도에서 확인할 수 있습니다.</p>
             <div class="mfd__radar" data-nearby-radar aria-hidden="true"></div>
             <ol class="mfd__list" data-nearby-list aria-label="가까운 순 장소"></ol>
@@ -174,14 +176,27 @@
           </div>
         </form>
       </dialog>
-      <dialog class="boarding" data-arrival aria-labelledby="arrival-title">
+      <dialog class="boarding boarding--flight-actions" data-waypoint-dialog aria-labelledby="waypoint-title">
         <div class="boarding__form">
-          <p class="boarding__eyebrow">목적지 도착</p>
-          <h2 id="arrival-title" class="boarding__title">비행을 종료할까요?</h2>
-          <p class="boarding__description">도착지 반경 100m에 도달했습니다. 종료하거나 계속 비행할 수 있습니다.</p>
+          <p class="boarding__eyebrow">경유지 추가</p>
+          <h2 class="boarding__title" id="waypoint-title">이 장소를 경유지로 추가할까요?</h2>
+          <p class="boarding__description" data-waypoint-name></p>
+          <p class="boarding__description" data-waypoint-description>추가한 순서대로 방문 순서가 저장됩니다. 최대 5곳까지 추가할 수 있습니다.</p>
+          <div class="boarding__actions"><button type="button" class="boarding__button boarding__button--ghost" data-waypoint-cancel>취소</button><button type="button" class="boarding__button boarding__button--primary" data-waypoint-add>경유지 추가</button></div>
+        </div>
+      </dialog>
+      <dialog class="boarding boarding--flight-actions" data-end-dialog aria-labelledby="end-title">
+        <div class="boarding__form">
+          <p class="boarding__eyebrow">비행 종료</p>
+          <h2 class="boarding__title" id="end-title">플레이 기록을 저장하고 종료할까요?</h2>
+          <p class="boarding__description" data-end-itinerary></p>
+          <p class="boarding__description">출발지와 경유지, 도착지의 방문 순서를 저장합니다. 기록 저장에는 로그인이 필요합니다.</p>
+          <p role="status" class="boarding__description" data-end-status></p>
+          <a class="boarding__button boarding__button--ghost" data-end-login href="/login" target="_blank" rel="noopener" hidden>새 탭에서 로그인 후 다시 저장</a>
           <div class="boarding__actions">
-            <button class="boarding__button boarding__button--ghost" data-arrival-continue type="button">계속 비행</button>
-            <a class="boarding__button boarding__button--primary" data-arrival-end href="/flight">비행 종료</a>
+            <a class="boarding__button boarding__button--quiet" data-end-discard href="/flight">저장 없이 종료</a>
+            <button type="button" class="boarding__button boarding__button--ghost" data-end-cancel>계속 비행</button>
+            <button type="button" class="boarding__button boarding__button--primary" data-end-save>저장하고 종료</button>
           </div>
         </div>
       </dialog>

@@ -65,6 +65,9 @@ export function renderTicket(post) {
   start.href = `/flight/${encodeURIComponent(post.id)}`;
   start.setAttribute('aria-label', `'${post.title}' 비행시작`);
   stub.append(start);
+  const records = element('a', 'flight-ticket__records', '플레이 기록');
+  records.href = `/flight/records?post=${encodeURIComponent(post.id)}`;
+  stub.append(records);
 
   card.append(body, stub);
   item.append(card);

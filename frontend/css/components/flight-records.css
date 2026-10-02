@@ -1,0 +1,21 @@
+.flight-records { max-width: 840px; padding: 40px 24px; margin: auto; }
+.flight-records > ol { list-style: none; padding: 0; display: grid; gap: 16px; }
+.flight-records > ol > li {
+  min-height: 248px; padding: 32px; border: 0; border-radius: 16px;
+  background: #f2f4f6; color: #1d1d1f; box-shadow: none;
+  transition: background-color 180ms ease;
+}
+.flight-records > ol > li:hover { background: #e9ecef; }
+.flight-records h2 { margin: 0; font-size: 24px; font-weight: 700; line-height: 1.35; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.flight-records p { color: #6b7b8e; line-height: 1.7; }
+.flight-records > ol > li > p { margin: 16px 0 24px; color: #4e5968; font-size: 16px; line-height: 1.6; letter-spacing: -.02em; }
+.flight-records__itinerary { list-style: none; margin: 0; border-left: 2px solid #d9dfe5; padding-left: 18px; }
+.flight-records__itinerary li { padding: 10px 0; color: #4e5968; line-height: 1.6; overflow-wrap: anywhere; }
+@media (max-width: 639px) {
+  .flight-records > ol > li { padding: 24px; }
+  .flight-records h2 { font-size: 20px; }
+  .flight-records > ol > li > p { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flight-records > ol > li { transition: none; }
+}
