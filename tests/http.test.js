@@ -81,7 +81,7 @@ test('/mypage는 내 정보 조회, 정보 수정, 회원 탈퇴 화면을 제�
   }
 });
 
-test('게시판 메뉴는 공통 헤더와 빈 메인이 있는 /post 페이지로 이동한다', async () => {
+test('게시판 메뉴는 공통 헤더가 있는 /post 페이지로 이동한다', async () => {
   const home = await fetch(origin + '/');
   const homeHtml = await home.text();
   assert.equal([...homeHtml.matchAll(/href="\/post">게시판<\/a>/g)].length, 2);
@@ -91,10 +91,25 @@ test('게시판 메뉴는 공통 헤더와 빈 메인이 있는 /post 페이지�
   assert.equal(response.status, 200);
   assert.ok(html.includes('<header class="site-header">'));
   assert.ok(html.includes('<title>게시판 | EnjoyTrip</title>'));
-  assert.match(html, /<main>\s*<\/main>/);
   assert.equal([...html.matchAll(/href="\/post" aria-current="page">게시판<\/a>/g)].length, 2);
   assert.ok(!html.includes('href="/" aria-current="page"'));
   assert.ok(!html.includes('data-nav-link'));
+});
+
+test('게시판 히어로는 두 줄 제목과 /post/write로 가는 글쓰기 버튼을 서버 HTML에 포함한다', async () => {
+  const response = await fetch(origin + '/post');
+  const html = await response.text();
+  assert.match(html, /<h1 [^>]*class="board-hero__title">\s*<span>EnjoyTrip 게시판<\/span>\s*<span>어디로 떠나볼까요\?<\/span>/);
+  assert.match(html, /<canvas class="board-hero__canvas" aria-hidden="true"><\/canvas>/);
+  assert.match(html, /href="\/post\/write">[\s\S]*?글쓰기\s*<\/a>/);
+  assert.ok(html.includes('href="/css/components/board-hero.css"'));
+  assert.ok(!html.includes('travel-hero'));
+
+  for (const path of ['/css/components/board-hero.css', '/js/components/board-hero/index.js']) {
+    const asset = await fetch(origin + path);
+    assert.equal(asset.status, 200, path);
+    await asset.arrayBuffer();
+  }
 });
 
 test('홈 히어로는 두 줄 제목과 /flight, /post로 가는 CTA를 서버 HTML에 포함한다', async () => {
