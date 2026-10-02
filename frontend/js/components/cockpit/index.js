@@ -11,6 +11,9 @@ import { createSpeed } from './speed.js';
 import { createThrust } from './thrust.js';
 import { createYoke } from './yoke.js';
 import { initializeFlightMap } from '../flight-map/index.js';
+import { loadTrip } from './trip.js';
+import { createJourney } from './journey.js';
+import { distanceMeters } from './navigation.js';
 
 const MAX_FRAME_SECONDS = 0.1;
 
@@ -19,16 +22,34 @@ function mount(container, parts, position = 'append') {
   return parts;
 }
 
-export function initializeCockpit() {
+export async function initializeCockpit() {
   const cockpit = document.querySelector('[data-cockpit]');
   if (!cockpit) return;
 
   const boarding = initializeBoarding(cockpit);
-  const map = initializeFlightMap();
   const pause = cockpit.querySelector('[data-flight-pause]');
   const status = cockpit.querySelector('[data-flight-status]');
+  let route;
+  try {
+    route = await loadTrip();
+  } catch (error) {
+    cockpit.querySelector('#boarding-title').textContent = '비행을 준비하지 못했습니다.';
+    cockpit.querySelector('#boarding-description').textContent = error.message;
+    status.textContent = '경로 확인 실패';
+    pause.disabled = true;
+    return;
+  }
+  document.title = `${route.post.title} · 비행 | EnjoyTrip`;
+  cockpit.querySelector('[data-flight-title]').textContent = route.post.title;
+  cockpit.querySelector('[data-flight-origin]').textContent = `${route.post.origin}에서 출발`;
+  cockpit.querySelector('#boarding-title').textContent = route.post.title;
+  cockpit.querySelector('#boarding-description').textContent = `${route.post.origin} → ${route.post.destination}. 탑승 후 3초 카운트다운 뒤 출발합니다.`;
+  cockpit.querySelector('[data-flight-start]').disabled = false;
+  const map = initializeFlightMap(route);
+  const journey = createJourney(cockpit, route);
   let paused = false;
-  const isFlying = () => !boarding.isOpen() && !paused && !document.hidden && map.isReady();
+  const available = () => !boarding.isOpen() && !journey.isOpen() && !paused && !document.hidden && map.isReady();
+  const isFlying = () => available() && journey.started();
   const input = createInput(cockpit, isFlying);
   pause.addEventListener('click', () => {
     paused = !paused;
@@ -36,9 +57,9 @@ export function initializeCockpit() {
     pause.setAttribute('aria-pressed', String(paused));
     input.reset();
   });
-  const model = createFlightModel(MOCK_FLIGHT);
+  const model = createFlightModel({ ...MOCK_FLIGHT, position: route.start, heading: route.heading });
   const views = [
-    createHud(cockpit.querySelector('[data-hud]')),
+    createHud(cockpit.querySelector('[data-hud]'), distanceMeters(route.start, route.end)),
     ...mount(cockpit.querySelector('[data-yoke]'), [createYoke()], 'prepend'),
     ...mount(cockpit.querySelector('[data-pfd]'), [createAttitude(), createHeading()]),
     ...mount(cockpit.querySelector('[data-engine]'), [createSpeed(), createThrust()]),
@@ -46,22 +67,33 @@ export function initializeCockpit() {
   ];
 
   let last = performance.now();
+  document.addEventListener('visibilitychange', () => {
+    last = performance.now();
+    input.reset();
+  });
   let previousStatus;
   let animation;
   const frame = now => {
-    const dt = Math.min((now - last) / 1000, MAX_FRAME_SECONDS);
+    const elapsed = Math.max(0, (now - last) / 1000);
+    const dt = Math.min(elapsed, MAX_FRAME_SECONDS);
     last = now;
+    journey.tick(elapsed, available());
     const flying = isFlying();
     const axes = flying ? input.axes() : IDLE_AXES;
-    if (flying) model.step(dt, axes);
+    if (flying) {
+      model.step(dt, axes);
+      journey.inspect(model.state.position);
+    }
     else input.reset();
     map.update(model.state, now);
-    const label = !map.isReady() ? '지도 연결 대기' : boarding.isOpen() ? '탑승 대기' : paused ? '일시정지' : '비행 중';
+    const label = !map.isReady() ? '지도 연결 대기' : boarding.isOpen() ? '탑승 대기'
+      : journey.isOpen() ? '도착 확인' : paused || document.hidden ? '일시정지'
+      : !journey.started() ? '출발 준비' : '비행 중';
     if (label !== previousStatus) {
       status.textContent = label;
-      cockpit.dataset.flying = String(flying);
       previousStatus = label;
     }
+    cockpit.dataset.flying = String(isFlying());
     for (const view of views) view.update(model.state, axes);
     animation = requestAnimationFrame(frame);
   };

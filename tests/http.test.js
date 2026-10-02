@@ -120,7 +120,7 @@ test('/flight/{게시글 ID}는 환경변수 키로 Kakao 지도 SDK를 불러�
     const html = await response.text();
     assert.equal(response.status, 200);
     assert.ok(html.includes('data-flight-map'));
-    assert.ok(html.includes('src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=test-key&amp;autoload=false"'));
+    assert.ok(html.includes('src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=test-key&amp;autoload=false&amp;libraries=services"'));
     assert.ok(!html.includes('{{kakao-map-key}}'));
     // 조종석: P1 핸들(WASD)·P2 페달(↑↓)·중앙 주변 정보·탑승 안내
     for (const marker of ['data-cockpit', 'data-hud', 'data-yoke', 'data-pfd', 'data-engine', 'data-nearby', 'data-boarding']) {

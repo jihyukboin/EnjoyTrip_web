@@ -72,7 +72,9 @@ function trendPoints({ heading, turnRate, speed }) {
   return points.join(' ');
 }
 
-function ownship() {
+function ownship(routeLength) {
+  // 짧은 경로에서는 더 작게 표시하되, 긴 경로에서도 기존 크기의 60%로 제한한다.
+  const scale = Math.max(0.25, Math.min(0.6, Math.sqrt(routeLength / 10000) * 0.6));
   const trend = svg('polyline', { class: 'hud__trend' });
   const plane = createAircraft();
   const root = svg('svg', { class: 'hud__ownship', viewBox: '-100 -100 200 200' }, [
@@ -86,17 +88,17 @@ function ownship() {
     root,
     update(state) {
       trend.setAttribute('points', trendPoints(state));
-      plane.setAttribute('transform', `rotate(${state.heading})`);
+      plane.setAttribute('transform', `rotate(${state.heading}) scale(${scale})`);
     }
   };
 }
 
-export function createHud(container) {
+export function createHud(container, routeLength = 10000) {
   const tape = headingTape();
   const speed = readout('속도', 'kt');
   const altitude = readout('고도', 'ft', ' hud__readout--right');
   const top = element('div', 'hud__top');
-  const plane = ownship();
+  const plane = ownship(routeLength);
   top.append(speed.box, tape.root, altitude.box);
   container.append(top, plane.root);
 
