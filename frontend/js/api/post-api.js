@@ -9,6 +9,8 @@ export const listPosts = (page = 1) => request(`/api/posts?page=${encodeURICompo
 
 export const getPost = async id => (await request(postPath(id))).post;
 
+export const getNotice = async id => (await request(`/api/notices/${encodeURIComponent(id)}`)).notice;
+
 export const updatePost = async (id, { title, content }) =>
   (await request(postPath(id), { method: 'PUT', body: { title, content } })).post;
 

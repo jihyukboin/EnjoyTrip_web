@@ -25,7 +25,13 @@ export function renderPost(post, memberId) {
   item.className = 'post-list__item';
   const title = document.createElement('h3');
   title.className = 'post-list__item-title';
-  title.textContent = post.title;
+  const link = document.createElement('a');
+  link.className = 'post-list__link';
+  link.href = post.type === 'notice'
+    ? `/post/detail?notice=${encodeURIComponent(post.id)}`
+    : `/post/detail?id=${encodeURIComponent(post.id)}`;
+  link.textContent = post.title;
+  title.append(link);
   const content = document.createElement('p');
   content.className = 'post-list__excerpt';
   content.textContent = post.content;
@@ -36,7 +42,7 @@ export function renderPost(post, memberId) {
   time.textContent = dateFormat.format(new Date(post.createdAt));
   meta.append(`${post.author.name} · `, time);
   item.append(title, content, meta);
-  // 공지사항은 author.id가 null이므로 버튼이 붙지 않는다
-  if (memberId && post.author.id === memberId) item.append(renderActions(post));
+  // 공지사항에는 버튼을 붙이지 않는다
+  if (post.type === 'post' && memberId && post.author.id === memberId) item.append(renderActions(post));
   return item;
 }

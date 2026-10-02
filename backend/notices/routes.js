@@ -16,6 +16,13 @@ export function createNoticeRoutes({ notices }) {
         sendJson(response, 201, { data: { notice: notices.create(body) } });
       })]
     ])],
+    ['/api/notices/:id', new Map([
+      ['GET', {
+        action(body, token, response, request, { id }) {
+          sendJson(response, 200, { data: { notice: notices.get(id) } });
+        }
+      }]
+    ])],
     ['/api/admin/notices/:id', new Map([
       ['PUT', mutation(validateNotice, (body, token, response, request, { id }) => {
         sendJson(response, 200, { data: { notice: notices.update(id, body) } });

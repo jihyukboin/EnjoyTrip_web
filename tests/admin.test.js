@@ -179,7 +179,7 @@ test('최신 공지는 공통 헤더 하단에 닫기 버튼과 함께 표시되
   const banner = await header();
   assert.match(banner, /<\/nav>\s*<section class="notice-banner" aria-label="공지사항" data-notice-banner data-notice-key="\d+\.2000">/);
   // 한 줄 구조: 확성기 아이콘 → 제목 → 닫기 버튼, 본문은 표시하지 않는다
-  assert.match(banner, /data-notice-banner[^>]*>\s*<svg class="notice-banner__icon"[^>]*aria-label="공지">[\s\S]*?<\/svg>\s*<p class="notice-banner__title">&lt;b&gt;새 공지&lt;\/b&gt; {{account-href}}<\/p>\s*<button class="notice-banner__close"/);
+  assert.match(banner, new RegExp(String.raw`data-notice-banner[^>]*>\s*<svg class="notice-banner__icon"[^>]*aria-label="공지">[\s\S]*?<\/svg>\s*<a class="notice-banner__title" href="\/post\/detail\?notice=${latest.id}">&lt;b&gt;새 공지&lt;\/b&gt; {{account-href}}<\/a>\s*<button class="notice-banner__close"`));
   assert.ok(!banner.includes('둘째'));
   assert.ok(!banner.includes('notice-banner__badge'));
   assert.ok(!banner.includes('이전 공지'));
@@ -193,6 +193,14 @@ test('최신 공지는 공통 헤더 하단에 닫기 버튼과 함께 표시되
   await api.call(`/api/admin/notices/${latest.id}`, { method: 'PUT', body: { title: '수정 공지', content: '수정 내용' }, cookie: admin });
   assert.match(await header(dismissed), /data-notice-key="\d+\.3000"[\s\S]*수정 공지/);
 
+  // 공지 상세는 로그인 없이 공개 API로 조회한다
+  const detail = await api.call(`/api/notices/${latest.id}`);
+  assert.equal(detail.status, 200);
+  assert.equal(detail.json.data.notice.title, '수정 공지');
+  assert.equal(detail.json.data.notice.content, '수정 내용');
   await api.call(`/api/admin/notices/${latest.id}`, { method: 'DELETE', body: {}, cookie: admin });
   assert.match(await header(), /이전 공지/);
+  const removed = await api.call(`/api/notices/${latest.id}`);
+  assert.equal(removed.status, 404);
+  assert.equal(removed.json.error.code, 'NOTICE_NOT_FOUND');
 });

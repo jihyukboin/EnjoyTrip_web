@@ -8,7 +8,7 @@ import { createApi } from '../backend/api.js';
 import { createRequestHandler } from '../backend/app.js';
 import { openDatabase } from '../backend/db/database.js';
 import { SESSION_MS } from '../backend/auth/tokens.js';
-import { createPost, deletePost, getPost, listPosts, updatePost } from '../frontend/js/api/post-api.js';
+import { createPost, deletePost, getNotice, getPost, listPosts, updatePost } from '../frontend/js/api/post-api.js';
 import { request } from '../frontend/js/api/client.js';
 import { logIn, signUp, logOut } from '../frontend/js/api/member-api.js';
 
@@ -122,6 +122,8 @@ test('게시글 목록은 최신 글부터 20개씩 나누고 잘못된 페이�
   assert.equal(mixed.posts[0].title, '여행 안내');
   assert.equal(mixed.posts[0].content, '안내 내용');
   assert.equal(mixed.posts[0].author.name, '공지사항');
+  assert.equal(mixed.posts[0].type, 'notice');
+  assert.equal(mixed.posts[1].type, 'post');
   assert.equal(mixed.posts[1].title, '글 21');
   assert.equal(mixed.pagination.total, 42);
   assert.deepEqual((await listPosts(3)).posts.map(post => post.title), ['글 2', '글 1']);
@@ -163,4 +165,25 @@ test('게시글 상세·수정·삭제는 작성자 본인만 변경할 수 있�
   assert.equal(await deletePost(post.id), undefined);
   assert.equal(api.db.prepare('SELECT count(*) AS n FROM posts').get().n, 0);
   await assert.rejects(getPost(post.id), error => error.status === 404);
+});
+
+test('로그인 없이 게시글 목록·게시글 상세·공지 상세와 해당 페이지를 조회할 수 있다', async t => {
+  const api = await fixture(t);
+  await api.register();
+  const post = await createPost({ title: '공개 글', content: '공개 본문' });
+  const noticeId = Number(api.db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)')
+    .run('공개 공지', '공지 본문', 1_000, 1_000).lastInsertRowid);
+  await logOut();
+
+  const { posts } = await listPosts();
+  assert.deepEqual(posts.map(item => [item.type, item.title]), [['post', '공개 글'], ['notice', '공개 공지']]);
+  assert.equal((await getPost(post.id)).content, '공개 본문');
+  assert.equal((await getNotice(noticeId)).content, '공지 본문');
+
+  // 세션 쿠키 없이 페이지가 리다이렉트 없이 열린다
+  for (const path of ['/post', `/post/detail?id=${post.id}`, `/post/detail?notice=${noticeId}`]) {
+    const response = await globalThis.fetch(path, { redirect: 'manual', headers: {} });
+    assert.equal(response.status, 200, path);
+    assert.ok((await response.text()).includes('<header class="site-header">'), path);
+  }
 });

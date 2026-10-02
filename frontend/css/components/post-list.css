@@ -33,8 +33,41 @@
 }
 
 .post-list__item {
+  position: relative;
   padding: 18px 4px;
   border-bottom: 1px solid #e5e8eb;
+}
+
+.post-list__item:hover {
+  background: #f9fafb;
+}
+
+.post-list__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 제목 링크의 클릭 영역을 항목 전체로 넓힌다 */
+.post-list__link::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+}
+
+.post-list__link:focus-visible {
+  outline: none;
+}
+
+.post-list__link:focus-visible::after {
+  outline: 2px solid #4daafc;
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* 수정·삭제 버튼은 링크 위에서 따로 눌린다 */
+.post-list__actions {
+  position: relative;
+  z-index: 1;
 }
 
 .post-list__item-title {

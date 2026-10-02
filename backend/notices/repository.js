@@ -16,6 +16,7 @@ export function createNoticeRepository(db) {
   return {
     list: () => all.all().map(toNotice),
     latest: () => toNotice(latest.get()),
+    byId: id => toNotice(byId.get(id)) ?? null,
     create({ title, content }, time) {
       return toNotice(byId.get(Number(insert.run(title, content, time, time).lastInsertRowid)));
     },
