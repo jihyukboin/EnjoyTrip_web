@@ -1,8 +1,9 @@
 import { DEPARTURE } from '../cockpit/navigation.js';
+import { placeKey } from '../cockpit/nearby-state.js';
 
 // 비행기가 화면 중앙에 머물도록 지도 중심을 실제 비행 좌표에 맞춘다.
 // setCenter는 애니메이션을 누적하지 않아 연속적인 위치 갱신에 적합하다.
-export function initializeFlightMap(route) {
+export function initializeFlightMap(route, onSelectPlace = () => {}) {
   const container = document.querySelector('[data-flight-map]');
   const status = document.querySelector('.flight-map__status');
   const retry = document.querySelector('[data-map-retry]');
@@ -12,6 +13,8 @@ export function initializeFlightMap(route) {
   let failed = false;
   let places = [];
   let placePins = [];
+  let focusedPlace = null;
+  const center = () => focusedPlace ?? position;
   const renderPlaces = () => {
     placePins.forEach(pin => pin.setMap(null));
     placePins = [];
@@ -19,10 +22,18 @@ export function initializeFlightMap(route) {
     for (const place of places) {
       const point = new kakao.maps.LatLng(place.lat, place.lng);
       const marker = new kakao.maps.Marker({ map, position: point, title: place.name });
-      const label = document.createElement('span');
+      kakao.maps.event.addListener(marker, 'click', () => onSelectPlace(place));
+      const label = document.createElement('button');
+      label.type = 'button';
       label.className = 'flight-map__place';
+      label.dataset.category = place.category;
+      label.setAttribute('aria-label', `${place.name} 지도에서 확인`);
+      const active = focusedPlace && placeKey(focusedPlace) === placeKey(place);
+      label.setAttribute('aria-pressed', String(Boolean(active)));
       label.textContent = place.name;
-      const overlay = new kakao.maps.CustomOverlay({ map, position: point, content: label, yAnchor: 2.6, zIndex: 2 });
+      label.title = place.name;
+      label.addEventListener('click', () => onSelectPlace(place));
+      const overlay = new kakao.maps.CustomOverlay({ map, position: point, content: label, yAnchor: 2.6, zIndex: active ? 4 : 2 });
       placePins.push(marker, overlay);
     }
   };
@@ -72,7 +83,7 @@ export function initializeFlightMap(route) {
         status.textContent = '';
         const resize = new ResizeObserver(() => {
           map.relayout();
-          map.setCenter(new kakao.maps.LatLng(position.lat, position.lng));
+          map.setCenter(new kakao.maps.LatLng(center().lat, center().lng));
         });
         resize.observe(container);
         window.addEventListener('pagehide', event => { if (!event.persisted) resize.disconnect(); });
@@ -85,6 +96,11 @@ export function initializeFlightMap(route) {
 
   return {
     isReady: () => Boolean(map),
+    focusPlace(place) {
+      focusedPlace = place;
+      renderPlaces();
+      if (map) map.setCenter(new kakao.maps.LatLng(center().lat, center().lng));
+    },
     setPlaces(visiblePlaces) {
       places = visiblePlaces;
       renderPlaces();
@@ -93,7 +109,7 @@ export function initializeFlightMap(route) {
       position = state.position;
       if (!map || now - lastUpdate < 1000 / 30) return;
       lastUpdate = now;
-      map.setCenter(new kakao.maps.LatLng(position.lat, position.lng));
+      map.setCenter(new kakao.maps.LatLng(center().lat, center().lng));
     }
   };
 }

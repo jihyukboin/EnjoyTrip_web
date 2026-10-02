@@ -1,113 +1,115 @@
-// 비행 위치 반경 2km의 관광명소·음식점·숙소를 표시한다.
+// API 조회와 현재 비행 위치에 따른 거리·방향 갱신은 별도로 처리한다.
 import { getNearby } from '../../api/nearby-api.js';
-import { element, writer } from './dom.js';
+import { element } from './dom.js';
 import { clockPosition, formatDistance } from './format.js';
 import { PLACE_CATEGORIES } from './mock.js';
 import { createRadar } from './radar.js';
+import { nearbyPlaces, placeKey, shouldRefreshNearby } from './nearby-state.js';
 
-const LIST_LIMIT = 5;
-const REFRESH_MS = 20000;
-const STATIONARY_REFRESH_MS = 300000;
-const MOVE_KM = 0.4;
-const RAD = Math.PI / 180;
-
-function traveled(a, b) {
-  const north = (a.lat - b.lat) * 111.2;
-  const east = (a.lng - b.lng) * 111.2 * Math.cos(a.lat * RAD);
-  return Math.hypot(north, east);
-}
-
-function placeItem(place) {
-  const category = PLACE_CATEGORIES[place.category];
-  const item = element('li', 'place');
-  item.style.setProperty('--place-color', `var(--place-${place.category})`);
-
-  const marker = element('span', 'place__marker', category.glyph);
-  marker.setAttribute('aria-hidden', 'true');
-  const text = element('span', 'place__text');
-  const meta = element('span', 'place__meta');
-  meta.append(element('span', 'place__category', category.label), ` · ${formatDistance(place.distance)}`);
-  text.append(element('span', 'place__name', place.name), meta);
-  const clock = element('span', 'place__clock');
-  item.append(marker, text, clock);
-
-  const setClock = writer(hour => {
-    clock.textContent = `${hour}시`;
-    clock.setAttribute('aria-label', `${hour}시 방향`);
-  });
-  return { item, update: heading => setClock(clockPosition(place.bearing, heading)) };
-}
-
-export function createNearby(section, onVisiblePlaces = () => {}) {
-  let places = [];
-  let radar = createRadar(places);
-  const radarHost = section.querySelector('[data-nearby-radar]');
-  const meta = section.querySelector('.mfd__meta');
+export function createNearby(section, onVisiblePlaces = () => {}, onSelect = () => {}) {
   const list = section.querySelector('[data-nearby-list]');
+  const meta = section.querySelector('.mfd__meta');
+  const radarHost = section.querySelector('[data-nearby-radar]');
   const filters = section.querySelectorAll('[data-filter]');
-  let items = [];
-  let heading = 0;
-  let selected = 'all';
-  let lastRequest = 0;
-  let lastPosition;
-  let pending = false;
-
+  const refreshButton = section.querySelector('[data-nearby-refresh]');
+  const hint = section.querySelector('[data-nearby-hint]');
+  let places = [], visible = [], rows = [];
+  let radar = createRadar([]);
+  let position, lastPosition, lastRequest = 0, lastPaint = -Infinity;
+  let heading = 0, selected = 'all', selectedKey = '', signature = '';
+  let pending = false, failed = false, loaded = false;
   radarHost.append(radar.element);
 
-  function show(category) {
-    selected = category;
-    filters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.filter === category)));
-    radar.filter(category);
-    const visiblePlaces = places.filter(place => category === 'all' || place.category === category)
-      .slice(0, LIST_LIMIT);
-    items = visiblePlaces.map(placeItem);
-    items.forEach(entry => entry.update(heading));
-    list.replaceChildren(...items.map(entry => entry.item));
-    onVisiblePlaces(visiblePlaces);
-    if (!items.length) list.append(element('li', 'mfd__empty', '반경 2km 안에 표시할 장소가 없습니다.'));
+  function select(key) {
+    const place = visible.find(entry => placeKey(entry) === key);
+    if (!place) return;
+    selectedKey = key;
+    rows.forEach(row => row.button.setAttribute('aria-pressed', String(row.key === key)));
+    onSelect(place);
   }
 
-  async function refresh(position) {
+  function paint() {
+    if (!position) return;
+    const all = nearbyPlaces(places, position);
+    const matching = all.filter(place => selected === 'all' || place.category === selected);
+    visible = matching.slice(0, 5);
+    filters.forEach(button => {
+      const category = button.dataset.filter;
+      const count = all.filter(place => category === 'all' || place.category === category).length;
+      button.setAttribute('aria-pressed', String(category === selected));
+      button.textContent = `${({ all: '전체', AT4: '관광', FD6: '음식', AD5: '숙소' })[category]}`;
+      button.title = `${count}곳`;
+    });
+    const nextSignature = visible.map(placeKey).join('|');
+    if (signature !== nextSignature || !rows.length) {
+      signature = nextSignature;
+      if (selectedKey && !visible.some(place => placeKey(place) === selectedKey)) {
+        selectedKey = '';
+        onSelect(null);
+      }
+      rows = visible.map(place => {
+        const item = element('li');
+        const button = element('button', 'place');
+        button.type = 'button';
+        button.style.setProperty('--place-color', `var(--place-${place.category})`);
+        button.setAttribute('aria-pressed', String(placeKey(place) === selectedKey));
+        const text = element('span', 'place__text');
+        const detail = element('span', 'place__meta');
+        const clock = element('span', 'place__clock');
+        text.append(element('span', 'place__name', place.name), detail);
+        button.title = place.name;
+        button.append(element('span', 'place__marker', PLACE_CATEGORIES[place.category].glyph), text, clock);
+        button.addEventListener('click', () => select(placeKey(place)));
+        item.append(button);
+        return { item, button, detail, clock, key: placeKey(place) };
+      });
+      list.replaceChildren(...rows.map(row => row.item));
+      onVisiblePlaces(visible);
+    }
+    rows.forEach((row, index) => {
+      const place = visible[index];
+      row.detail.textContent = `${PLACE_CATEGORIES[place.category].label} · ${formatDistance(place.distance)}`;
+      row.clock.textContent = `${clockPosition(place.bearing, heading)}시`;
+    });
+    if (!rows.length) list.replaceChildren(element('li', 'mfd__empty',
+      !loaded && pending ? '주변 장소를 찾고 있습니다…' : failed ? '연결을 확인한 뒤 새로고침해주세요.' : '현재 반경 2km 안에 해당 장소가 없습니다.'));
+    radar = createRadar(visible);
+    radarHost.replaceChildren(radar.element);
+    radar.update(heading);
+    meta.textContent = pending ? '새로운 주변 장소를 찾는 중…' : failed ? '연결 지연 · 자동 재시도 중' : '내 위치 반경 2km · 이동에 따라 갱신';
+    hint.textContent = `${visible.length}곳 표시${matching.length > 5 ? ` / ${matching.length}곳 중 가까운 순` : ''} · 장소를 누르면 멈춰서 확인`;
+  }
+
+  async function refresh() {
+    if (pending || !position) return;
     pending = true;
     lastRequest = performance.now();
     lastPosition = { ...position };
-    meta.textContent = '현재 위치 기준 · 조회 중';
-    try {
-      places = await getNearby(position);
-      radar = createRadar(places);
-      radarHost.replaceChildren(radar.element);
-      show(selected);
-      radar.update(heading);
-      meta.textContent = '현재 위치 기준 · 2km';
-    } catch {
-      places = [];
-      radar = createRadar(places);
-      radarHost.replaceChildren(radar.element);
-      show(selected);
-      radar.update(heading);
-      meta.textContent = '주변 장소 조회 실패';
-      list.replaceChildren(element('li', 'mfd__empty', '주변 장소를 불러오지 못했습니다. 잠시 후 다시 시도합니다.'));
-    } finally {
-      pending = false;
-    }
+    refreshButton.disabled = true;
+    paint();
+    try { places = await getNearby(lastPosition); loaded = true; failed = false; }
+    catch { failed = true; }
+    finally { pending = false; refreshButton.disabled = false; paint(); }
   }
 
   section.addEventListener('click', event => {
     const button = event.target.closest('[data-filter]');
-    if (button) show(button.dataset.filter);
+    if (button) { selected = button.dataset.filter; paint(); }
   });
-  list.replaceChildren(element('li', 'mfd__empty', '주변 장소를 불러오는 중입니다.'));
-
+  refreshButton.addEventListener('click', () => void refresh());
   return {
+    select: place => select(placeKey(place)),
+    clearSelection() {
+      selectedKey = '';
+      rows.forEach(row => row.button.setAttribute('aria-pressed', 'false'));
+    },
     update(state) {
+      position = state.position;
       heading = state.heading;
       radar.update(heading);
-      items.forEach(entry => entry.update(heading));
       const now = performance.now();
-      if (!pending && (!lastPosition || (now - lastRequest >= REFRESH_MS && traveled(lastPosition, state.position) >= MOVE_KM) ||
-          now - lastRequest >= STATIONARY_REFRESH_MS)) {
-        void refresh(state.position);
-      }
+      if (now - lastPaint >= 1000) { lastPaint = now; paint(); }
+      if (!document.hidden && !pending && shouldRefreshNearby({ position, lastPosition, elapsed: now - lastRequest, failed })) void refresh();
     }
   };
 }
