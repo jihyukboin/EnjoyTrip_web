@@ -13,7 +13,8 @@ const db = openDatabase(config.databasePath);
 const server = createServer(createRequestHandler({
   apiHandler: createApi({ db, config }),
   readSession: createSessionReader({ db }),
-  readNotice: createNoticeBannerReader({ db })
+  readNotice: createNoticeBannerReader({ db }),
+  kakaoMapKey: config.kakaoMapKey
 }));
 server.once('close', () => { if (db.isOpen) db.close(); });
 

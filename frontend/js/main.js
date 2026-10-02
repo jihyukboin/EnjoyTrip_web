@@ -28,6 +28,11 @@ if (document.querySelector('[data-flight-list]')) {
   await initializeFlight();
 }
 
+if (document.querySelector('[data-flight-map]')) {
+  const { initializeFlightMap } = await import('./components/flight-map/index.js');
+  initializeFlightMap();
+}
+
 if (document.querySelector('[data-post-detail]')) {
   const { initializePostDetail } = await import('./components/post-detail/index.js');
   await initializePostDetail();

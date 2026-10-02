@@ -24,12 +24,16 @@ function adminRedirect(pathname, loggedIn, isAdmin) {
   return loggedIn ? '/' : `/login?returnTo=${encodeURIComponent(pathname)}`;
 }
 
+// /flight/{게시글 ID}는 하나의 지도 페이지를 함께 쓴다
+const flightMapPage = new URL('../../frontend/pages/flight-map.html', import.meta.url);
+const findPage = pathname => pages.get(pathname) ?? (/^\/flight\/[1-9]\d*$/.test(pathname) ? flightMapPage : null);
+
 // view는 페이지 요청일 때만 세션·공지를 읽도록 함수로 받는다
 export async function servePage(request, response, pathname, view = () => ({})) {
-  const pagePath = pages.get(pathname);
+  const pagePath = findPage(pathname);
   if (!pagePath) return false;
 
-  const { loggedIn = false, isAdmin = false, notice = null } = view();
+  const { loggedIn = false, isAdmin = false, notice = null, kakaoMapKey = '' } = view();
   const location = adminRedirect(pathname, loggedIn, isAdmin);
   if (location) {
     response.writeHead(302, { Location: location, 'Cache-Control': 'no-store' });
@@ -38,7 +42,7 @@ export async function servePage(request, response, pathname, view = () => ({})) 
   }
 
   const source = await readFile(pagePath);
-  const content = await renderPage(source, pathname, { loggedIn, isAdmin, notice });
+  const content = await renderPage(source, pathname, { loggedIn, isAdmin, notice, kakaoMapKey });
   sendContent(request, response, content, 'text/html; charset=utf-8');
   return true;
 }

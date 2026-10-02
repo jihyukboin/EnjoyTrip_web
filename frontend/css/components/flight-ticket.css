@@ -79,7 +79,7 @@
 
 .flight-ticket__route {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 18px;
 }
@@ -89,15 +89,16 @@
   min-width: 0;
 }
 
-.flight-ticket__code {
+.flight-ticket__address {
   color: #191f28;
-  font-size: 30px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
-.flight-ticket__destination {
+.flight-ticket__title {
   margin: 0;
   overflow: hidden;
   color: #191f28;
@@ -211,11 +212,11 @@
     gap: 10px;
   }
 
-  .flight-ticket__code {
-    font-size: 24px;
+  .flight-ticket__address {
+    font-size: 15px;
   }
 
-  .flight-ticket__destination {
+  .flight-ticket__title {
     font-size: 18px;
   }
 

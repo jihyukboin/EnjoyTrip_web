@@ -39,10 +39,10 @@ function renderHeader(header, currentPath, loggedIn, isAdmin, accountMenu, banne
   return rendered.replace('<!-- notice-banner -->', () => banner);
 }
 
-export async function renderPage(source, pathname = '/', { loggedIn = false, isAdmin = false, notice = null } = {}) {
-  let html = source.toString('utf8');
+export async function renderPage(source, pathname = '/', { loggedIn = false, isAdmin = false, notice = null, kakaoMapKey = '' } = {}) {
+  let html = source.toString('utf8').replaceAll('{{kakao-map-key}}', () => encodeURIComponent(kakaoMapKey));
   const required = partials.filter(([marker]) => html.includes(marker));
-  if (!required.length) return source;
+  if (!required.length) return Buffer.from(html);
 
   const contents = await Promise.all(required.map(([, path]) => readFile(path, 'utf8')));
   const accountMenu = loggedIn && required.some(([marker]) => marker === '<!-- site-header -->')

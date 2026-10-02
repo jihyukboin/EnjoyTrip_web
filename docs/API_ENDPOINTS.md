@@ -25,13 +25,13 @@
 
 | 메서드 | 경로 | 요청 | 성공 응답 |
 | --- | --- | --- | --- |
-| POST | `/api/posts` | `title`, `content` | 201, `data.post` |
+| POST | `/api/posts` | `title`, `content`, `origin`, `destination` | 201, `data.post` |
 | GET | `/api/posts?page=1` | `page`: 1 이상의 정수, 기본값 1 | 200, `data.posts`, `data.pagination` |
 | GET | `/api/posts/:id` | 없음 | 200, `data.post` |
-| PUT | `/api/posts/:id` | `title`, `content` | 200, `data.post` |
+| PUT | `/api/posts/:id` | `title`, `content`, `origin`, `destination` | 200, `data.post` |
 | DELETE | `/api/posts/:id` | `{}` | 204 |
 | GET | `/api/notices/:id` | 없음 | 200, `data.notice` |
 
-등록·수정·삭제에는 로그인이 필요하며 작성자는 세션에서 확인합니다. 수정·삭제는 작성자 본인만 가능하며 다른 회원의 글은 403 `FORBIDDEN`, 없는 글은 404 `POST_NOT_FOUND`를 반환합니다. 제목은 1~100자, 본문은 1~2,000자입니다. 게시글은 `id`, `title`, `content`, `author`(`id`, `name`), `createdAt`을 반환합니다.
+등록·수정·삭제에는 로그인이 필요하며 작성자는 세션에서 확인합니다. 수정·삭제는 작성자 본인만 가능하며 다른 회원의 글은 403 `FORBIDDEN`, 없는 글은 404 `POST_NOT_FOUND`를 반환합니다. 제목은 1~100자, 본문은 1~2,000자, 시작점(`origin`)·도착점(`destination`)은 줄바꿈 없는 1~200자 주소입니다. 게시글은 `id`, `title`, `content`, `origin`, `destination`, `author`(`id`, `name`), `createdAt`을 반환합니다.
 
 목록은 공지사항을 포함해 최신순으로 20개씩 반환하며 각 항목의 `type`은 `post` 또는 `notice`입니다. 공지 상세 조회는 로그인 없이 가능합니다. `pagination`은 `page`, `pageSize`, `total`, `totalPages`를 포함하며 마지막 페이지를 넘으면 빈 목록을 반환합니다.

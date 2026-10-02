@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { after, before, test } from 'node:test';
-import { handleRequest } from '../backend/app.js';
+import { createRequestHandler, handleRequest } from '../backend/app.js';
 
 const server = createServer(handleRequest);
 let origin;
@@ -111,6 +111,32 @@ test('/flight는 항공권 카드 목록 화면과 정적 파일을 제공한다
   }
 });
 
+test('/flight/{게시글 ID}는 환경변수 키로 Kakao 지도 SDK를 불러오는 전체 화면 지도를 제공한다', async () => {
+  const mapServer = createServer(createRequestHandler({ kakaoMapKey: 'test-key' }));
+  await new Promise(resolve => mapServer.listen(0, '127.0.0.1', resolve));
+  const mapOrigin = `http://127.0.0.1:${mapServer.address().port}`;
+  try {
+    const response = await fetch(mapOrigin + '/flight/12');
+    const html = await response.text();
+    assert.equal(response.status, 200);
+    assert.ok(html.includes('data-flight-map'));
+    assert.ok(html.includes('src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=test-key&amp;autoload=false"'));
+    assert.ok(!html.includes('{{kakao-map-key}}'));
+    for (const path of ['/flight/0', '/flight/abc', '/flight/1/x']) {
+      const missing = await fetch(mapOrigin + path);
+      assert.equal(missing.status, 404, path);
+      await missing.arrayBuffer();
+    }
+    for (const path of ['/css/components/flight-map.css', '/js/components/flight-map/index.js']) {
+      const asset = await fetch(mapOrigin + path);
+      assert.equal(asset.status, 200, path);
+      await asset.arrayBuffer();
+    }
+  } finally {
+    await new Promise(resolve => mapServer.close(resolve));
+  }
+});
+
 test('/post/detail는 게시글 상세 화면과 목록 링크를 제공한다', async () => {
   const response = await fetch(origin + '/post/detail?id=1');
   const html = await response.text();
@@ -131,7 +157,7 @@ test('/post/edit는 글쓰기와 같은 제출 폼을 제공한다', async () =>
   assert.match(html, /<textarea id="post-content" name="content"/);
 });
 
-test('/post/write는 제목·본문 입력란과 API 제출 폼을 제공한다', async () => {
+test('/post/write는 제목·시작점·도착점·본문 입력란과 API 제출 폼을 제공한다', async () => {
   const response = await fetch(origin + '/post/write');
   const html = await response.text();
   assert.equal(response.status, 200);
@@ -139,6 +165,10 @@ test('/post/write는 제목·본문 입력란과 API 제출 폼을 제공한다'
   assert.ok(html.includes('<title>글쓰기 | EnjoyTrip</title>'));
   assert.match(html, /<input id="post-title" name="title"[^>]*maxlength="100"/);
   assert.match(html, /<textarea id="post-content" name="content"/);
+  // 시작점·도착점은 직접 입력하지 않고 Kakao 우편번호 서비스로 채운다
+  assert.match(html, /<input id="post-origin" name="origin" readonly data-address-search/);
+  assert.match(html, /<input id="post-destination" name="destination" readonly data-address-search/);
+  assert.ok(html.includes('src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"'));
   assert.match(html, /href="\/post">취소<\/a>/);
   assert.match(html, /<button class="button button--primary" type="submit">등록<\/button>/);
   assert.ok(html.includes('data-post-form'));

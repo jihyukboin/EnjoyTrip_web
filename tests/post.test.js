@@ -100,6 +100,35 @@ test('빈 글·길이 초과·잘못된 필드와 작성자 위조·다른 출�
   assert.equal(result.status, 201);
 });
 
+test('시작점·도착점은 1~200자 한 줄 주소만 저장하고 수정 시 함께 바뀐다', async t => {
+  const api = await fixture(t);
+  await api.register();
+  for (const [field, body] of [
+    ['origin', { title: '제목', content: '내용', destination: route.destination }],
+    ['destination', { title: '제목', content: '내용', origin: route.origin }],
+    ['origin', { title: '제목', content: '내용', ...route, origin: ' ' }],
+    ['destination', { title: '제목', content: '내용', ...route, destination: '가'.repeat(201) }],
+    ['origin', { title: '제목', content: '내용', ...route, origin: '서울\n중구' }],
+    ['destination', { title: '제목', content: '내용', ...route, destination: 1 }]
+  ]) {
+    const result = await api.call(body);
+    assert.equal(result.status, 400);
+    assert.ok(result.json.error.fields[field], field);
+  }
+  assert.equal(api.db.prepare('SELECT count(*) AS n FROM posts').get().n, 0);
+
+  const post = await createPost({ title: '제목', content: '내용', origin: ` ${route.origin} `, destination: route.destination });
+  assert.equal(post.origin, route.origin);
+  assert.equal(post.destination, route.destination);
+  assert.deepEqual({ ...api.db.prepare('SELECT origin, destination FROM posts').get() }, route);
+  const changed = { origin: '제주특별자치도 제주시 공항로 2', destination: '가'.repeat(200) };
+  await updatePost(post.id, { title: '제목', content: '내용', ...changed });
+  const stored = await getPost(post.id);
+  assert.equal(stored.origin, changed.origin);
+  assert.equal(stored.destination, changed.destination);
+  assert.equal((await listPosts()).posts[0].origin, changed.origin);
+});
+
 test('게시글 목록은 최신 글부터 20개씩 나누고 잘못된 페이지 값을 거부한다', async t => {
   const api = await fixture(t);
   assert.deepEqual(await listPosts(), { posts: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 } });

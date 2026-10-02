@@ -20,9 +20,9 @@ function planeIcon() {
   return svg;
 }
 
-function endpoint(code, label) {
+function endpoint(address, label) {
   const box = element('div', 'flight-ticket__endpoint');
-  box.append(element('span', 'flight-ticket__code', code), element('span', 'flight-ticket__label', label));
+  box.append(element('span', 'flight-ticket__address', address || '미등록'), element('span', 'flight-ticket__label', label));
   return box;
 }
 
@@ -46,10 +46,7 @@ export function renderTicket(post) {
     element('span', 'flight-ticket__pass', 'BOARDING PASS'));
 
   const route = element('div', 'flight-ticket__route');
-  const destination = element('div', 'flight-ticket__endpoint flight-ticket__endpoint--to');
-  destination.append(element('h2', 'flight-ticket__destination', post.title),
-    element('span', 'flight-ticket__label', '도착'));
-  route.append(endpoint('ICN', '출발'), planeIcon(), destination);
+  route.append(endpoint(post.origin, '출발'), planeIcon(), endpoint(post.destination, '도착'));
 
   const time = document.createElement('time');
   time.dateTime = post.createdAt;
@@ -57,7 +54,8 @@ export function renderTicket(post) {
   const info = element('dl', 'flight-ticket__info');
   info.append(infoItem('승객', post.author.name), infoItem('편명', flightNumber), infoItem('탑승일', time));
 
-  body.append(header, route, element('p', 'flight-ticket__excerpt', post.content), info);
+  body.append(header, element('h2', 'flight-ticket__title', post.title), route,
+    element('p', 'flight-ticket__excerpt', post.content), info);
 
   const stub = element('div', 'flight-ticket__stub');
   // 페이지 이동이므로 버튼 모양의 링크로 둔다

@@ -26,5 +26,7 @@ export function readConfig(env = process.env) {
       (databasePath.toLowerCase() === publicRoot || databasePath.toLowerCase().startsWith(publicRoot + sep))) {
     throw new Error('DB_PATH must be outside the public frontend directory.');
   }
-  return { host, port, origin: originUrl.origin, databasePath, secureCookies };
+  // Kakao 지도 JavaScript 키는 브라우저에 노출되는 공개 키다
+  const kakaoMapKey = env.KAKAO_MAP_KEY ?? '';
+  return { host, port, origin: originUrl.origin, databasePath, secureCookies, kakaoMapKey };
 }

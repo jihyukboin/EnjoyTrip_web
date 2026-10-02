@@ -2,7 +2,7 @@ import { serveStatic } from './http/static.js';
 import { servePage } from './http/pages.js';
 import { ApiError, sendApiError } from './http/api-response.js';
 
-export function createRequestHandler({ apiHandler, readSession = () => ({}), readNotice = () => null } = {}) {
+export function createRequestHandler({ apiHandler, readSession = () => ({}), readNotice = () => null, kakaoMapKey = '' } = {}) {
   return async function handleRequest(request, response) {
     let pathname;
     try {
@@ -29,7 +29,7 @@ export function createRequestHandler({ apiHandler, readSession = () => ({}), rea
         return;
       }
 
-      const view = () => ({ ...readSession(request), notice: readNotice(request) });
+      const view = () => ({ ...readSession(request), notice: readNotice(request), kakaoMapKey });
       if (await servePage(request, response, pathname, view)) return;
       await serveStatic(request, response, pathname);
     } catch (error) {
