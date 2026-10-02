@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-test('실제 서버를 재시작해 회원·세션 영속성과 로컬 콘솔 재설정까지 검증한다', { timeout: 30_000 }, async t => {
+test('실제 서버를 재시작해 회원·세션 영속성을 검증한다', { timeout: 30_000 }, async t => {
   const directory = mkdtempSync(join(tmpdir(), 'enjoytrip-runtime-'));
   const probe = createServer();
   await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
@@ -35,8 +35,7 @@ test('실제 서버를 재시작해 회원·세션 영속성과 로컬 콘솔 �
       cwd: fileURLToPath(new URL('../', import.meta.url)),
       env: {
         ...process.env, HOST: '127.0.0.1', PORT: String(port), APP_ORIGIN: origin,
-        DB_PATH: join(directory, 'enjoytrip.sqlite'), COOKIE_SECURE: 'false',
-        RESET_DELIVERY_MODE: 'console', NODE_ENV: 'test'
+        DB_PATH: join(directory, 'enjoytrip.sqlite'), COOKIE_SECURE: 'false', NODE_ENV: 'test'
       },
       stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
     });
@@ -69,25 +68,13 @@ test('실제 서버를 재시작해 회원·세션 영속성과 로컬 콘솔 �
     return { status: response.status, json: text ? JSON.parse(text) : null, cookie: response.headers.get('set-cookie')?.split(';', 1)[0] };
   }
   const password = 'runtime-test-passphrase-2026';
-  const email = 'runtime@example.com';
   await start();
-  assert.equal((await call('/api/members', 'POST', { email, name: '실행 검증', password })).status, 201);
-  const logged = await call('/api/auth/login', 'POST', { email, password });
+  assert.equal((await call('/api/members', 'POST', { id: 'runtime', name: '실행 검증', password })).status, 201);
+  const logged = await call('/api/auth/login', 'POST', { id: 'runtime', password });
   assert.equal(logged.status, 200);
   await stop();
   await start();
   const restored = await call('/api/members/me', 'GET', undefined, logged.cookie);
   assert.equal(restored.status, 200);
-  assert.equal(restored.json.data.member.email, email);
-  assert.equal((await call('/api/auth/password-reset-requests', 'POST', { email })).status, 202);
-  // stdout is a separate pipe; allow its queued chunk to arrive before reading the demo token.
-  for (let attempt = 0; attempt < 20 && !output.includes('Token:'); attempt += 1) {
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-  const token = output.match(/Token: ([A-Za-z0-9_-]{43})/)?.[1];
-  assert.ok(token, 'The explicitly enabled local console mode delivers a reset token.');
-  const newPassword = 'runtime-new-passphrase-2026';
-  assert.equal((await call('/api/auth/password-resets', 'POST', { token, newPassword })).status, 204);
-  assert.equal((await call('/api/members/me', 'GET', undefined, logged.cookie)).status, 401);
-  assert.equal((await call('/api/auth/login', 'POST', { email, password: newPassword })).status, 200);
+  assert.equal(restored.json.data.member.id, 'runtime');
 });

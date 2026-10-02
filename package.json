@@ -7,8 +7,8 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "node --env-file-if-exists=.env --watch backend/index.js",
-    "start": "node --env-file-if-exists=.env backend/index.js",
+    "dev": "node --env-file-if-exists=.env.local --watch backend/index.js",
+    "start": "node --env-file-if-exists=.env.production backend/index.js",
     "test": "node --test"
   }
 }

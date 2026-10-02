@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>글쓰기 | EnjoyTrip</title>
+    <!-- document-head -->
+    <link rel="stylesheet" href="/css/components/form.css">
+    <link rel="stylesheet" href="/css/components/post-write.css">
+  </head>
+  <body>
+    <!-- site-header -->
+    <main>
+      <div class="post-write">
+        <h1 class="post-write__title">글쓰기</h1>
+
+        <form class="post-write__card form" data-post-form novalidate>
+          <fieldset disabled>
+            <div class="form-field">
+              <label for="post-title">제목</label>
+              <input id="post-title" name="title" required maxlength="100" placeholder="제목을 입력하세요" aria-describedby="post-title-error">
+              <p id="post-title-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="post-content">본문</label>
+              <textarea id="post-content" name="content" required maxlength="2000" rows="14" aria-describedby="post-content-error" placeholder="내용을 입력하세요"></textarea>
+              <p id="post-content-error" class="form-field__error"></p>
+            </div>
+            <p class="form-status" role="status">로그인 상태를 확인하고 있습니다.</p>
+            <div class="form-actions">
+              <a class="button button--secondary" href="/post">취소</a>
+              <button class="button button--primary" type="submit">등록</button>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </main>
+  </body>
+</html>

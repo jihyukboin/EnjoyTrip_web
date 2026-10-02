@@ -2,7 +2,7 @@ import { serveStatic } from './http/static.js';
 import { servePage } from './http/pages.js';
 import { ApiError, sendApiError } from './http/api-response.js';
 
-export function createRequestHandler({ apiHandler } = {}) {
+export function createRequestHandler({ apiHandler, isLoggedIn = () => false } = {}) {
   return async function handleRequest(request, response) {
     let pathname;
     try {
@@ -29,7 +29,7 @@ export function createRequestHandler({ apiHandler } = {}) {
         return;
       }
 
-      if (await servePage(request, response, pathname)) return;
+      if (await servePage(request, response, pathname, { loggedIn: isLoggedIn(request) })) return;
       await serveStatic(request, response, pathname);
     } catch (error) {
       console.error('요청 처리 실패:', error.name);

@@ -5,7 +5,21 @@ const partials = [
   ['<!-- site-header -->', new URL('./site-header.html', import.meta.url)]
 ];
 
-export async function renderPage(source, pathname = '/') {
+// 로그인 상태에 따라 헤더의 계정 링크를 바꾼다
+const accountLinks = {
+  guest: { href: '/login', label: '로그인' },
+  member: { href: '/mypage', label: '마이페이지' }
+};
+
+function renderHeader(header, currentPath, loggedIn) {
+  const account = loggedIn ? accountLinks.member : accountLinks.guest;
+  return header
+    .replace(/ data-nav-link="([^"]+)"/g, (_, href) => href === currentPath ? ' aria-current="page"' : '')
+    .replaceAll('{{account-href}}', account.href)
+    .replaceAll('{{account-label}}', account.label);
+}
+
+export async function renderPage(source, pathname = '/', { loggedIn = false } = {}) {
   let html = source.toString('utf8');
   const required = partials.filter(([marker]) => html.includes(marker));
   if (!required.length) return source;
@@ -14,7 +28,7 @@ export async function renderPage(source, pathname = '/') {
   const currentPath = pathname === '/index.html' ? '/' : pathname;
   required.forEach(([marker], index) => {
     const content = marker === '<!-- site-header -->'
-      ? contents[index].replace(/ data-nav-link="([^"]+)"/g, (_, href) => href === currentPath ? ' aria-current="page"' : '')
+      ? renderHeader(contents[index], currentPath, loggedIn)
       : contents[index];
     html = html.replaceAll(marker, () => content);
   });

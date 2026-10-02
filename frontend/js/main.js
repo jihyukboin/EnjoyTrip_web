@@ -22,3 +22,8 @@ if (document.querySelector('.mypage')) {
   const { initializeMypage } = await import('./components/mypage/index.js');
   await initializeMypage();
 }
+
+if (document.querySelector('[data-post-form]')) {
+  const { initializePostWrite } = await import('./components/post-write/index.js');
+  await initializePostWrite();
+}

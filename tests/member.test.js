@@ -1,72 +1,89 @@
 import assert from 'node:assert/strict';
-import { beforeEach, test } from 'node:test';
+import { test } from 'node:test';
+import { createServer } from 'node:http';
+import { createApi } from '../backend/api.js';
+import { createRequestHandler } from '../backend/app.js';
+import { openDatabase } from '../backend/db/database.js';
+import * as api from '../frontend/js/api/member-api.js';
 import { guestViewFromHash } from '../frontend/js/components/auth/views.js';
 
-// Node.js에는 브라우저 localStorage가 없으므로 메모리 저장소로 대신한다
-class MemoryStorage {
-  #items = new Map();
-  getItem(key) { return this.#items.get(key) ?? null; }
-  setItem(key, value) { this.#items.set(key, String(value)); }
-  removeItem(key) { this.#items.delete(key); }
-}
-
-const api = await import('../frontend/js/mock/member-api.js');
-
-beforeEach(() => {
-  globalThis.localStorage = new MemoryStorage();
-});
-
-const rejectsWith = (promise, message, field) =>
-  assert.rejects(promise, error => error instanceof api.MemberApiError && error.message === message && error.field === field);
-
-test('체험 계정으로 로그인하면 비밀번호를 제외한 회원 정보를 돌려준다', async () => {
+test('프론트 API로 가입·로그인·수정·임시 비밀번호·탈퇴를 실제 서버에 연결한다', async t => {
+  const db = openDatabase(':memory:');
+  const config = { origin: '', secureCookies: false };
+  const server = createServer(createRequestHandler({ apiHandler: createApi({ db, config }) }));
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  config.origin = `http://127.0.0.1:${server.address().port}`;
+  const nativeFetch = globalThis.fetch;
+  let cookie = '';
+  // Node에는 브라우저 쿠키 저장소가 없으므로 HTTP의 Origin과 쿠키 처리만 보완한다.
+  globalThis.fetch = async (path, options) => {
+    assert.equal(options.credentials, 'same-origin');
+    const response = await nativeFetch(config.origin + path, {
+      ...options, headers: { ...options.headers, Origin: config.origin, ...(cookie ? { Cookie: cookie } : {}) }
+    });
+    const setCookie = response.headers.get('set-cookie');
+    if (setCookie) cookie = setCookie.split(';', 1)[0];
+    return response;
+  };
+  t.after(async () => {
+    globalThis.fetch = nativeFetch;
+    await new Promise(resolve => server.close(resolve));
+    db.close();
+  });
+  const member = { id: 'trip01', password: 'password1', name: '여행자' };
+  const rejects = (promise, code, field) => assert.rejects(promise,
+    error => error instanceof api.MemberApiError && error.code === code && error.field === field);
   assert.equal(await api.getCurrentMember(), null);
-  const member = await api.logIn({ id: 'ssafy', password: 'ssafy1234' });
-  assert.equal(member.id, 'ssafy');
-  assert.ok(!('password' in member));
-  assert.deepEqual(await api.getCurrentMember(), member);
-
+  await api.signUp(member);
+  await rejects(api.signUp(member), 'ID_ALREADY_EXISTS', 'id');
+  await rejects(api.signUp({ ...member, id: 'trip02', email: 'trip@example.com' }), 'VALIDATION_ERROR', 'email');
+  await api.signUp({ ...member, id: 'trip02' });
+  await rejects(api.logIn({ id: member.id, password: 'wrong' }), 'INVALID_CREDENTIALS');
+  const profile = await api.logIn({ id: member.id, password: member.password });
+  assert.equal(profile.id, member.id);
+  assert.ok(profile.joinedAt);
+  assert.ok(!('password' in profile));
+  assert.deepEqual(await api.getCurrentMember(), profile);
+  const firstCookie = cookie;
+  await api.logIn({ id: member.id, password: member.password });
+  const updated = await api.updateCurrentMember({ name: '새 이름', password: '' });
+  assert.equal(updated.name, '새 이름');
+  assert.ok(!('email' in updated));
   await api.logOut();
   assert.equal(await api.getCurrentMember(), null);
-  await rejectsWith(api.logIn({ id: 'ssafy', password: 'wrong' }), '아이디 또는 비밀번호가 올바르지 않습니다.');
-});
-
-test('회원가입은 중복 아이디를 막고 가입한 계정으로 로그인할 수 있다', async () => {
-  await rejectsWith(api.signUp({ id: 'ssafy', password: '12345678', name: '중복', email: 'a@example.com' }),
-    '이미 사용 중인 아이디입니다.', 'id');
-  await api.signUp({ id: 'trip01', password: 'password1', name: '여행자', email: 'trip@example.com' });
-  const member = await api.logIn({ id: 'trip01', password: 'password1' });
-  assert.equal(member.name, '여행자');
-  assert.ok(member.joinedAt);
-});
-
-test('정보 수정은 비밀번호를 비우면 기존 비밀번호를 유지한다', async () => {
-  await rejectsWith(api.updateCurrentMember({ name: 'a', email: 'b@example.com' }), '로그인이 필요합니다.');
-  await api.logIn({ id: 'ssafy', password: 'ssafy1234' });
-
-  const updated = await api.updateCurrentMember({ name: '박싸피', email: 'new@example.com', password: '' });
-  assert.equal(updated.name, '박싸피');
-  assert.equal(updated.email, 'new@example.com');
-  await api.logIn({ id: 'ssafy', password: 'ssafy1234' });
-
-  await api.updateCurrentMember({ name: '박싸피', email: 'new@example.com', password: 'changed123' });
-  await api.logIn({ id: 'ssafy', password: 'changed123' });
-});
-
-test('탈퇴는 비밀번호를 확인한 뒤 계정과 로그인 상태를 지운다', async () => {
-  await api.logIn({ id: 'ssafy', password: 'ssafy1234' });
-  await rejectsWith(api.withdrawCurrentMember({ password: 'wrong' }), '비밀번호가 올바르지 않습니다.', 'password');
-  await api.withdrawCurrentMember({ password: 'ssafy1234' });
-  assert.equal(await api.getCurrentMember(), null);
-  await rejectsWith(api.logIn({ id: 'ssafy', password: 'ssafy1234' }), '아이디 또는 비밀번호가 올바르지 않습니다.');
-});
-
-test('임시 비밀번호를 발급하면 기존 비밀번호 대신 임시 비밀번호로 로그인한다', async () => {
-  await rejectsWith(api.issueTemporaryPassword({ id: 'nobody' }), '가입되지 않은 아이디입니다.', 'id');
-  const temporary = await api.issueTemporaryPassword({ id: 'ssafy' });
+  await api.logIn({ id: member.id, password: member.password });
+  const otherDevice = cookie;
+  await api.logIn({ id: member.id, password: member.password });
+  await api.updateCurrentMember({ name: '새 이름', password: 'changed123' });
+  assert.equal((await api.getCurrentMember()).name, '새 이름');
+  for (const oldCookie of [firstCookie, otherDevice]) {
+    const result = await nativeFetch(config.origin + '/api/members/me', { headers: { Cookie: oldCookie } });
+    assert.equal(result.status, 401);
+  }
+  await rejects(api.logIn({ id: member.id, password: member.password }), 'INVALID_CREDENTIALS');
+  const beforeReset = cookie;
+  await rejects(api.issueTemporaryPassword({ id: 'nobody' }), 'MEMBER_NOT_FOUND', 'id');
+  const temporary = await api.issueTemporaryPassword({ id: member.id });
   assert.match(temporary, /^[a-z2-9]{10}$/);
-  await rejectsWith(api.logIn({ id: 'ssafy', password: 'ssafy1234' }), '아이디 또는 비밀번호가 올바르지 않습니다.');
-  await api.logIn({ id: 'ssafy', password: temporary });
+  assert.equal(await api.getCurrentMember(), null);
+  assert.equal((await nativeFetch(config.origin + '/api/members/me', { headers: { Cookie: beforeReset } })).status, 401);
+  const stored = db.prepare('SELECT password_hash FROM members WHERE username = ?').get(member.id);
+  assert.ok(!stored.password_hash.includes(temporary));
+  await rejects(api.logIn({ id: member.id, password: 'changed123' }), 'INVALID_CREDENTIALS');
+  await api.logIn({ id: member.id, password: temporary });
+  await rejects(api.withdrawCurrentMember({ password: 'wrong' }), 'INVALID_CURRENT_PASSWORD', 'password');
+  await api.withdrawCurrentMember({ password: temporary });
+  assert.equal(await api.getCurrentMember(), null);
+  assert.equal(db.prepare('SELECT count(*) AS n FROM members').get().n, 1);
+});
+
+test('연결 오류를 안내하고 세션 만료만 비로그인으로 처리한다', async t => {
+  const nativeFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = nativeFetch; });
+  globalThis.fetch = async () => { throw new TypeError('network'); };
+  await assert.rejects(api.getCurrentMember(), /서버에 연결하지 못했습니다/);
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: '서버 오류' } }), { status: 500 });
+  await assert.rejects(api.getCurrentMember(), error => error.status === 500);
 });
 
 test('/login 해시는 비로그인 화면만 고르고 나머지는 로그인 화면으로 처리한다', () => {

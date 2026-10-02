@@ -35,3 +35,11 @@ export function initializeSiteHeader() {
     }
   });
 }
+
+// 페이지 이동 없이 로그아웃한 경우 서버가 렌더링한 마이페이지 링크를 로그인 링크로 되돌린다
+export function showLoginLink() {
+  document.querySelectorAll('.site-header__login').forEach((link) => {
+    link.href = '/login';
+    (link.querySelector('[data-account-label]') ?? link).textContent = '로그인';
+  });
+}

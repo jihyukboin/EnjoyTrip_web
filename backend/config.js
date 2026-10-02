@@ -20,17 +20,11 @@ export function readConfig(env = process.env) {
       (originUrl.protocol !== 'https:' || !secureCookies)) {
     throw new Error('Non-local and production authentication requires HTTPS and secure cookies.');
   }
-  const resetDeliveryMode = env.RESET_DELIVERY_MODE ?? 'disabled';
-  if (!['disabled', 'console'].includes(resetDeliveryMode)) throw new Error('Unsupported RESET_DELIVERY_MODE.');
-  if (resetDeliveryMode === 'console' &&
-      (env.NODE_ENV === 'production' || !loopback.has(host) || !loopback.has(originUrl.hostname))) {
-    throw new Error('Console password recovery is only available on a local development server.');
-  }
   const databasePath = env.DB_PATH === ':memory:' ? ':memory:' : resolve(root, env.DB_PATH ?? 'backend/data/enjoytrip.sqlite');
   const publicRoot = resolve(root, 'frontend').toLowerCase();
   if (databasePath !== ':memory:' &&
       (databasePath.toLowerCase() === publicRoot || databasePath.toLowerCase().startsWith(publicRoot + sep))) {
     throw new Error('DB_PATH must be outside the public frontend directory.');
   }
-  return { host, port, origin: originUrl.origin, databasePath, secureCookies, resetDeliveryMode };
+  return { host, port, origin: originUrl.origin, databasePath, secureCookies };
 }

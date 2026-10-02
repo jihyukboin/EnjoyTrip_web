@@ -60,11 +60,12 @@ test('/mypage는 내 정보 조회, 정보 수정, 회원 탈퇴 화면을 제�
   assert.equal(response.status, 200);
   assert.ok(html.includes('<header class="site-header">'));
   assert.ok(html.includes('<title>마이페이지 | EnjoyTrip</title>'));
-  for (const slot of ['avatar', 'name', 'id', 'email', 'joinedAt']) {
+  for (const slot of ['avatar', 'name', 'id', 'joinedAt']) {
     assert.ok(html.includes(`data-profile="${slot}"`), slot);
   }
   assert.match(html, /<input id="edit-id" name="id"[^>]*readonly/);
   assert.ok(html.includes('data-edit-form'));
+  assert.ok(!html.includes('email'));
   assert.match(html, /<dialog class="mypage__dialog"[\s\S]*?data-withdraw-form/);
   assert.ok(!html.includes('aria-current="page"'));
 
@@ -73,7 +74,7 @@ test('/mypage는 내 정보 조회, 정보 수정, 회원 탈퇴 화면을 제�
     '/css/components/mypage.css',
     '/js/components/mypage/index.js',
     '/js/components/auth/index.js',
-    '/js/mock/member-api.js'
+    '/js/api/member-api.js'
   ]) {
     const asset = await fetch(origin + path);
     assert.equal(asset.status, 200, path);
@@ -110,6 +111,27 @@ test('게시판 히어로는 두 줄 제목과 /post/write로 가는 글쓰기 �
     assert.equal(asset.status, 200, path);
     await asset.arrayBuffer();
   }
+});
+
+test('/post/write는 제목·본문 입력란과 API 제출 폼을 제공한다', async () => {
+  const response = await fetch(origin + '/post/write');
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.ok(html.includes('<header class="site-header">'));
+  assert.ok(html.includes('<title>글쓰기 | EnjoyTrip</title>'));
+  assert.match(html, /<input id="post-title" name="title"[^>]*maxlength="100"/);
+  assert.match(html, /<textarea id="post-content" name="content"/);
+  assert.match(html, /href="\/post">취소<\/a>/);
+  assert.match(html, /<button class="button button--primary" type="submit">등록<\/button>/);
+  assert.ok(html.includes('data-post-form'));
+  assert.ok(html.includes('post-title-error'));
+  assert.ok(html.includes('post-content-error'));
+  assert.ok(html.includes('maxlength="2000"'));
+  assert.ok(html.includes('href="/css/components/post-write.css"'));
+
+  const asset = await fetch(origin + '/css/components/post-write.css');
+  assert.equal(asset.status, 200);
+  await asset.arrayBuffer();
 });
 
 test('홈 히어로는 두 줄 제목과 /flight, /post로 가는 CTA를 서버 HTML에 포함한다', async () => {

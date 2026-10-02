@@ -16,21 +16,59 @@ export function transaction(db, action) {
   }
 }
 
+const readSql = (name) => readFileSync(new URL(`./${name}`, import.meta.url), 'utf8');
+
+// members 재생성 중 DROP TABLE이 세션·게시글을 CASCADE 삭제하지 않도록 외래 키를 잠시 끈다.
+// PRAGMA foreign_keys는 트랜잭션 안에서 바뀌지 않으므로 트랜잭션 밖에서 설정한다.
+function dropEmail(db) {
+  db.exec('PRAGMA foreign_keys = OFF');
+  try {
+    transaction(db, () => {
+      db.exec(readSql('drop-email.sql'));
+      if (db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('Foreign key check failed.');
+      db.exec('PRAGMA user_version = 4');
+    });
+  } finally {
+    db.exec('PRAGMA foreign_keys = ON');
+  }
+}
+
 export function openDatabase(path) {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path, { timeout: 5000 });
   try {
     db.exec('PRAGMA foreign_keys = ON');
     if (db.prepare('PRAGMA foreign_keys').get().foreign_keys !== 1) throw new Error('Foreign keys are required.');
-    const version = db.prepare('PRAGMA user_version').get().user_version;
+    let version = db.prepare('PRAGMA user_version').get().user_version;
     if (version === 0) {
       transaction(db, () => {
-        db.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
-        db.exec('PRAGMA user_version = 1');
+        db.exec(readSql('schema.sql'));
+        db.exec(readSql('posts-schema.sql'));
+        db.exec('PRAGMA user_version = 4');
       });
-    } else if (version !== 1) {
-      throw new Error('Unsupported database schema version.');
+      version = 4;
     }
+    if (version === 1) {
+      transaction(db, () => {
+        db.exec("ALTER TABLE members ADD COLUMN username TEXT NOT NULL DEFAULT ''");
+        db.exec("UPDATE members SET username = 'member' || id");
+        db.exec('CREATE UNIQUE INDEX members_username_idx ON members(username)');
+        db.exec('PRAGMA user_version = 2');
+      });
+      version = 2;
+    }
+    if (version === 2) {
+      transaction(db, () => {
+        db.exec(readSql('posts-schema.sql'));
+        db.exec('PRAGMA user_version = 3');
+      });
+      version = 3;
+    }
+    if (version === 3) {
+      dropEmail(db);
+      version = 4;
+    }
+    if (version !== 4) throw new Error('Unsupported database schema version.');
     return db;
   } catch (error) {
     db.close();
