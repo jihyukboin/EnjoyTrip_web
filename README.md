@@ -33,12 +33,13 @@ frontend/
   index.html        초기 화면 (지구본·비행기 캔버스 히어로)
   pages/login.html  로그인·회원가입·비밀번호 찾기·로그아웃
   pages/mypage.html 내 정보 조회·정보 수정·회원 탈퇴
-  pages/post.html   게시판 페이지 (공통 헤더와 빈 메인)
+  pages/post.html   게시판 페이지 (손잡고 걷는 사람들 캔버스 히어로, 글쓰기 링크)
   css/main.css      기본 스타일
   css/components/   컴포넌트별 스타일 (form.css는 회원 화면 공통 입력란·버튼)
   js/main.js        브라우저 모듈 진입점
   js/components/    서버 HTML에 연결하는 화면 동작
     travel-hero/    홈 히어로 WebGL2 캔버스 (지도·점 생성·항로·셰이더·렌더링)
+    board-hero/     게시판 히어로 캔버스 (사람 원 배치·걷기 동작·점 생성·렌더링, 셰이더는 travel-hero 공유)
     auth/           /login 화면 전환과 폼 처리
     mypage/         /mypage 조회·수정·탈퇴
     form-controls.js 회원 폼 검증·오류 표시
@@ -55,6 +56,7 @@ tests/
   http.test.js         서버 응답 통합 검증
   member.test.js       회원 API 목업 검증
   travel-hero.test.js  히어로 지도·점·항로 계산 검증
+  board-hero.test.js   게시판 히어로 사람 배치·걷기 계산 검증
 ```
 
 API, DB, 인증 기능은 아직 구현하지 않았습니다.

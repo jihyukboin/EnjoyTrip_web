@@ -8,6 +8,11 @@ if (document.querySelector('.travel-hero')) {
   initializeTravelHero();
 }
 
+if (document.querySelector('.board-hero')) {
+  const { initializeBoardHero } = await import('./components/board-hero/index.js');
+  initializeBoardHero();
+}
+
 if (document.querySelector('.auth')) {
   const { initializeAuth } = await import('./components/auth/index.js');
   await initializeAuth();
