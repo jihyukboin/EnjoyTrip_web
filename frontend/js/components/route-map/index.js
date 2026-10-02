@@ -41,7 +41,7 @@ export function createRouteMap(root, { canvas = root.querySelector('[data-map-ca
       const points = await Promise.all([locate(maps, origin), locate(maps, destination)]);
       if (current !== revision) return;
       canvas.hidden = false;
-      map ??= new maps.Map(canvas, { center: points[0], level: 4, scrollwheel: false });
+      map ??= new maps.Map(canvas, { center: points[0], level: 4, scrollwheel: true });
       map.relayout();
       const samePoint = points[0].equals(points[1]);
       const labels = samePoint ? ['출발 · 도착'] : ['출발', '도착'];
