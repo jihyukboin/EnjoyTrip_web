@@ -23,6 +23,11 @@ if (document.querySelector('[data-post-list]')) {
   await initializePostList();
 }
 
+if (document.querySelector('[data-flight-list]')) {
+  const { initializeFlight } = await import('./components/flight/index.js');
+  await initializeFlight();
+}
+
 if (document.querySelector('[data-post-detail]')) {
   const { initializePostDetail } = await import('./components/post-detail/index.js');
   await initializePostDetail();

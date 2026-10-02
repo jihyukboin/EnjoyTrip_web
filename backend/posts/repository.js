@@ -2,26 +2,28 @@ const toPost = row => ({
   id: row.id,
   title: row.title,
   content: row.content,
+  origin: row.origin,
+  destination: row.destination,
   author: { id: row.username, name: row.name },
   createdAt: new Date(row.created_at).toISOString()
 });
 
 export function createPostRepository(db) {
-  const insert = db.prepare('INSERT INTO posts(author_id, title, content, created_at) VALUES (?, ?, ?, ?)');
+  const insert = db.prepare('INSERT INTO posts(author_id, title, content, origin, destination, created_at) VALUES (?, ?, ?, ?, ?, ?)');
   const count = db.prepare('SELECT (SELECT count(*) FROM posts) + (SELECT count(*) FROM notices) AS total');
-  const page = db.prepare(`SELECT 'post' AS type, p.id, p.title, p.content, p.created_at, m.username, m.name
+  const page = db.prepare(`SELECT 'post' AS type, p.id, p.title, p.content, p.origin, p.destination, p.created_at, m.username, m.name
     FROM posts p JOIN members m ON m.id = p.author_id
     UNION ALL
-    SELECT 'notice' AS type, id, title, content, created_at, NULL AS username, '공지사항' AS name FROM notices
+    SELECT 'notice' AS type, id, title, content, '' AS origin, '' AS destination, created_at, NULL AS username, '공지사항' AS name FROM notices
     ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`);
-  const byId = db.prepare(`SELECT p.id, p.author_id, p.title, p.content, p.created_at, m.username, m.name
+  const byId = db.prepare(`SELECT p.id, p.author_id, p.title, p.content, p.origin, p.destination, p.created_at, m.username, m.name
     FROM posts p JOIN members m ON m.id = p.author_id WHERE p.id = ?`);
-  const update = db.prepare('UPDATE posts SET title = ?, content = ? WHERE id = ?');
+  const update = db.prepare('UPDATE posts SET title = ?, content = ?, origin = ?, destination = ? WHERE id = ?');
   const remove = db.prepare('DELETE FROM posts WHERE id = ?');
   return {
-    create(authorId, { title, content }, time) {
-      const id = Number(insert.run(authorId, title, content, time).lastInsertRowid);
-      return { id, title, content, createdAt: new Date(time).toISOString() };
+    create(authorId, { title, content, origin, destination }, time) {
+      const id = Number(insert.run(authorId, title, content, origin, destination, time).lastInsertRowid);
+      return { id, title, content, origin, destination, createdAt: new Date(time).toISOString() };
     },
     count: () => count.get().total,
     // type은 'post' 또는 'notice'. 상세 페이지 주소를 고르는 데 쓴다
@@ -31,7 +33,7 @@ export function createPostRepository(db) {
       const row = byId.get(id);
       return row ? { authorId: row.author_id, post: toPost(row) } : null;
     },
-    update(id, { title, content }) { update.run(title, content, id); },
+    update(id, { title, content, origin, destination }) { update.run(title, content, origin, destination, id); },
     remove(id) { remove.run(id); }
   };
 }
