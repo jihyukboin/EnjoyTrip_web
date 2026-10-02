@@ -117,7 +117,7 @@ export function initializeTravelHero() {
       hover: smooth.hover,
       leave: clamp(-rect.top / (rect.height * 0.8), 0, 1),
       time: elapsedSeconds,
-      globeEnter: prefersReducedMotion ? 1 : clamp((elapsedSeconds - 0.15) / GLOBE_ENTER_SECONDS, 0, 1),
+      globeEnter: prefersReducedMotion ? 1 : clamp(elapsedSeconds / GLOBE_ENTER_SECONDS, 0, 1),
       flightEnter: prefersReducedMotion ? 1 : clamp(flightSeconds / FLIGHT_ENTER_SECONDS, 0, 1),
       flightTime: prefersReducedMotion ? STATIC_FLIGHT_TIME : Math.max(0, flightSeconds)
     });

@@ -46,13 +46,18 @@ DB는 재시작 후에도 유지되며 DB 파일·사이드카와 `.env`는 Git�
 ```text
 frontend/
   index.html        초기 화면 (지구본·비행기 캔버스 히어로)
-  pages/login.html  로그인 페이지 (공통 헤더와 빈 메인)
+  pages/login.html  로그인·회원가입·비밀번호 찾기·로그아웃
+  pages/mypage.html 내 정보 조회·정보 수정·회원 탈퇴
   pages/post.html   게시판 페이지 (공통 헤더와 빈 메인)
   css/main.css      기본 스타일
-  css/components/   컴포넌트별 스타일
+  css/components/   컴포넌트별 스타일 (form.css는 회원 화면 공통 입력란·버튼)
   js/main.js        브라우저 모듈 진입점
   js/components/    서버 HTML에 연결하는 화면 동작
     travel-hero/    홈 히어로 WebGL2 캔버스 (지도·점 생성·항로·셰이더·렌더링)
+    auth/           /login 화면 전환과 폼 처리
+    mypage/         /mypage 조회·수정·탈퇴
+    form-controls.js 회원 폼 검증·오류 표시
+  js/mock/          백엔드 대신 localStorage를 쓰는 회원 API 목업
   assets/           이미지 등 정적 자원
 backend/
   index.js          서버 시작 및 환경변수 설정
@@ -72,6 +77,7 @@ tests/
   database.test.js     DB 재시작·제약조건·설정 검증
   runtime.test.js      실제 서버 재시작·세션 영속성·콘솔 복구 검증
   http.test.js         서버 응답 통합 검증
+  member.test.js       회원 API 목업 검증
   travel-hero.test.js  히어로 지도·점·항로 계산 검증
 ```
 
@@ -86,6 +92,18 @@ HTML의 `<!-- site-header -->` 위치에는 Node.js 서버가 공통 헤더를 �
 헤더는 JavaScript 실행 전에도 표시되며, 브라우저 JavaScript는 모바일 메뉴 동작을 담당합니다.
 JavaScript가 꺼져 있어도 홈 링크를 이용할 수 있습니다.
 기능을 추가할 때 백엔드는 도메인별 디렉터리로, 프런트엔드는 기능별 모듈로 분리합니다.
+
+## 회원 기능 목업
+
+`/login`과 `/mypage`는 `frontend/js/mock/member-api.js`의 목업 API를 호출합니다.
+회원 정보와 로그인 상태는 브라우저 localStorage에 저장되며, 응답은 200ms 늦게 도착합니다.
+체험 계정은 `ssafy` / `ssafy1234`입니다. 저장된 데이터를 지우면 체험 계정으로 초기화됩니다.
+
+- `/login`: 로그인 화면이 기본이며 `#signup`은 회원가입, `#find-password`는 비밀번호 찾기 화면입니다. 로그인한 상태로 들어오면 로그아웃 버튼을 표시합니다.
+- 비밀번호 찾기: 아이디를 입력하면 임시 비밀번호를 발급해 화면에 바로 보여줍니다.
+- `/mypage`: 로그인하지 않았으면 `/login`으로 이동합니다. 새 비밀번호를 비워 두면 기존 비밀번호를 유지하며, 탈퇴하려면 비밀번호를 다시 입력해야 합니다.
+
+토이 프로젝트용 목업이라 비밀번호를 평문으로 저장합니다. 백엔드를 연결할 때는 `member-api.js`의 함수 이름은 유지하고 내부만 `fetch` 호출로 바꿉니다.
 
 ## 초기 로딩과 캐시
 
@@ -112,3 +130,4 @@ npm test
 
 서버 렌더링·캐시·홈 히어로 외에 회원가입·로그인·수정·탈퇴, 세션 만료·폐기, 재설정 토큰 만료·동시 소비, JSON·Origin 검증, 요청 제한, DB 영속성을 검증합니다.
 테스트는 임시 DB를 사용하며 실제 로컬 회원 DB를 변경하지 않습니다.
+서버 렌더링 결과, 폰트 제공, ETag/304, HEAD, 오류 응답, 홈 히어로의 지도·항로 계산, 회원 API 목업을 검증합니다.

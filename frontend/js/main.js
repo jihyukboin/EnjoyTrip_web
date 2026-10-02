@@ -7,3 +7,13 @@ if (document.querySelector('.travel-hero')) {
   const { initializeTravelHero } = await import('./components/travel-hero/index.js');
   initializeTravelHero();
 }
+
+if (document.querySelector('.auth')) {
+  const { initializeAuth } = await import('./components/auth/index.js');
+  await initializeAuth();
+}
+
+if (document.querySelector('.mypage')) {
+  const { initializeMypage } = await import('./components/mypage/index.js');
+  await initializeMypage();
+}
