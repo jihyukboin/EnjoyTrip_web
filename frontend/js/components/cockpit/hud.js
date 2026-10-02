@@ -3,6 +3,7 @@
 import { element, svg, svgText } from './dom.js';
 import { formatHeading, formatNumber, normalizeDegrees } from './format.js';
 import { MOCK_TARGET } from './mock.js';
+import { createAircraft } from './aircraft.js';
 
 const RAD = Math.PI / 180;
 const TAPE_WIDTH = 360;
@@ -73,10 +74,7 @@ function trendPoints({ heading, turnRate, speed }) {
 
 function ownship() {
   const trend = svg('polyline', { class: 'hud__trend' });
-  const plane = svg('path', {
-    class: 'hud__plane',
-    d: 'M0 -16C1.6 -16 2.4 -14 2.4 -11V-4L15 3V6L2.4 2.4 2 10 6 13V15L0 13.6-6 15V13L-2 10-2.4 2.4-15 6V3L-2.4 -4V-11C-2.4 -14-1.6 -16 0 -16Z'
-  });
+  const plane = createAircraft();
   const root = svg('svg', { class: 'hud__ownship', viewBox: '-100 -100 200 200' }, [
     svg('circle', { class: 'hud__ring', r: 88 }),
     svg('path', { d: 'M0 -88V-80', class: 'hud__tick' }),
@@ -88,15 +86,15 @@ function ownship() {
     root,
     update(state) {
       trend.setAttribute('points', trendPoints(state));
-      plane.setAttribute('transform', `rotate(${state.heading}) scale(1.5)`);
+      plane.setAttribute('transform', `rotate(${state.heading})`);
     }
   };
 }
 
 export function createHud(container) {
   const tape = headingTape();
-  const speed = readout('SPD', 'KT');
-  const altitude = readout('ALT', 'FT', ' hud__readout--right');
+  const speed = readout('속도', 'kt');
+  const altitude = readout('고도', 'ft', ' hud__readout--right');
   const top = element('div', 'hud__top');
   const plane = ownship();
   top.append(speed.box, tape.root, altitude.box);

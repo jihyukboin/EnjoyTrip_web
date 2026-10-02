@@ -1,4 +1,4 @@
-// 조종석 화면(MOCK): 키 입력 → 예시 비행 모델 → 계기·HUD·주변 정보를 매 프레임 그린다
+// 입력 → 비행 모델 → 지도·계기를 하나의 프레임 주기로 갱신한다.
 import { createAttitude } from './attitude.js';
 import { initializeBoarding } from './boarding.js';
 import { createFlightModel } from './flight-model.js';
@@ -10,6 +10,7 @@ import { createNearby } from './nearby.js';
 import { createSpeed } from './speed.js';
 import { createThrust } from './thrust.js';
 import { createYoke } from './yoke.js';
+import { initializeFlightMap } from '../flight-map/index.js';
 
 const MAX_FRAME_SECONDS = 0.1;
 
@@ -23,7 +24,18 @@ export function initializeCockpit() {
   if (!cockpit) return;
 
   const boarding = initializeBoarding(cockpit);
-  const input = createInput(cockpit, () => !boarding.isOpen());
+  const map = initializeFlightMap();
+  const pause = cockpit.querySelector('[data-flight-pause]');
+  const status = cockpit.querySelector('[data-flight-status]');
+  let paused = false;
+  const isFlying = () => !boarding.isOpen() && !paused && !document.hidden && map.isReady();
+  const input = createInput(cockpit, isFlying);
+  pause.addEventListener('click', () => {
+    paused = !paused;
+    pause.textContent = paused ? '비행 재개' : '일시정지';
+    pause.setAttribute('aria-pressed', String(paused));
+    input.reset();
+  });
   const model = createFlightModel(MOCK_FLIGHT);
   const views = [
     createHud(cockpit.querySelector('[data-hud]')),
@@ -34,14 +46,28 @@ export function initializeCockpit() {
   ];
 
   let last = performance.now();
+  let previousStatus;
+  let animation;
   const frame = now => {
     const dt = Math.min((now - last) / 1000, MAX_FRAME_SECONDS);
     last = now;
-    // 탑승 안내가 열려 있는 동안에는 조작을 비행에 반영하지 않는다
-    const axes = boarding.isOpen() ? IDLE_AXES : input.axes();
-    model.step(dt, axes);
+    const flying = isFlying();
+    const axes = flying ? input.axes() : IDLE_AXES;
+    if (flying) model.step(dt, axes);
+    else input.reset();
+    map.update(model.state, now);
+    const label = !map.isReady() ? '지도 연결 대기' : boarding.isOpen() ? '탑승 대기' : paused ? '일시정지' : '비행 중';
+    if (label !== previousStatus) {
+      status.textContent = label;
+      cockpit.dataset.flying = String(flying);
+      previousStatus = label;
+    }
     for (const view of views) view.update(model.state, axes);
-    requestAnimationFrame(frame);
+    animation = requestAnimationFrame(frame);
   };
-  requestAnimationFrame(frame);
+  animation = requestAnimationFrame(frame);
+  window.addEventListener('pagehide', () => cancelAnimationFrame(animation));
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) { last = performance.now(); animation = requestAnimationFrame(frame); }
+  });
 }

@@ -1,244 +1,44 @@
-/* 탑승 안내 대화상자: 역할·조작법 안내와 1인·2인 선택 */
+/* 첫 진입과 조작 도움말: 짧은 설명, 인원 선택, 두 가지 조작만 안내한다. */
 .boarding {
-  --seat-color: var(--ck-p1);
-
-  width: min(880px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
-  padding: 0;
-  border: 1px solid rgb(255 255 255 / 0.09);
-  border-radius: 24px;
-  background: linear-gradient(180deg, #111821, #0a0e14);
-  color: var(--ck-text);
-  box-shadow: 0 40px 80px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.06);
-  opacity: 0;
-  translate: 0 14px;
-  transition: opacity 0.25s, translate 0.25s, overlay 0.25s allow-discrete, display 0.25s allow-discrete;
+  width: min(680px, calc(100vw - 32px)); max-height: calc(100dvh - 32px);
+  padding: 0; border: 1px solid #d4d8d9; border-radius: 8px;
+  background: #f7f8f6; color: #202c34; box-shadow: 0 24px 80px #0005;
 }
-
-.boarding[open] {
-  opacity: 1;
-  translate: 0 0;
+.boarding::backdrop { background: #0b1019b3; }
+.boarding__form { display: grid; gap: 24px; padding: 36px; }
+.boarding__eyebrow { margin: 0 0 12px; color: #577081; font-size: 12px; font-weight: 600; }
+.boarding__title { margin: 0; font-size: clamp(23px, 3vw, 29px); font-weight: 650; letter-spacing: -.04em; line-height: 1.3; }
+.boarding__description { margin: -10px 0 0; max-width: 54ch; color: #62717b; font-size: 14px; line-height: 1.8; word-break: keep-all; }
+.boarding__crew { display: flex; gap: 24px; margin: 0; padding: 0 0 20px; border: 0; border-bottom: 1px solid #d5dadd; }
+.boarding__crew-option { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; min-height: 36px; }
+.boarding__crew-option input { width: 16px; height: 16px; margin: 0; accent-color: #244b68; }
+.boarding__crew-option small { color: #6c7982; font-size: 11px; }
+.boarding__seats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.boarding__seat { display: grid; align-content: start; gap: 18px; min-width: 0; }
+.boarding__seat-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.boarding .seat__badge { color: #62717b; }
+.boarding__seat-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
+.boarding__seat-role { color: #6c7982; font-size: 12px; }
+.boarding__seat-body { display: grid; gap: 18px; }
+.boarding__seat-body .keys { justify-content: start; height: 80px; align-content: center; }
+.boarding .key { width: 36px; height: 36px; border-color: #c9d0d4; background: #fff; color: #324b5d; font-size: 13px; }
+.boarding__legend { display: grid; gap: 8px; margin: 0; font-size: 12px; }
+.boarding__legend div { display: flex; gap: 10px; }
+.boarding__legend dt { min-width: 16px; color: #284963; font-weight: 700; }
+.boarding__legend dd { margin: 0; color: #62717b; }
+.boarding__note { margin: 0; padding-top: 20px; border-top: 1px solid #d5dadd; color: #62717b; font-size: 12px; line-height: 1.8; }
+.boarding__actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.boarding__button { display: inline-flex; align-items: center; justify-content: center; gap: 28px; min-height: 46px; padding: 0 20px; border: 1px solid transparent; border-radius: 4px; font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.boarding__button--ghost { padding-inline: 0; color: #62717b; background: transparent; }
+.boarding__button--ghost:hover { color: #1c3447; }
+.boarding__button--primary { background: #244b68; color: #fff; }
+.boarding__button--primary:hover { background: #183b56; }
+.boarding :focus-visible { outline-color: #244b68; }
+@media (max-width: 560px) {
+  .boarding__form { padding: 24px; gap: 20px; }
+  .boarding__seats { grid-template-columns: 1fr; gap: 24px; }
+  .boarding__seat-body { grid-template-columns: 116px minmax(0, 1fr); align-items: center; gap: 12px; }
+  .boarding__legend { font-size: 11px; }
+  .boarding__crew { gap: 20px; }
 }
-
-@starting-style {
-  .boarding[open] {
-    opacity: 0;
-    translate: 0 14px;
-  }
-}
-
-.boarding::backdrop {
-  background: rgb(2 5 9 / 0.55);
-  backdrop-filter: blur(6px) saturate(0.8);
-}
-
-.boarding__form {
-  display: grid;
-  gap: 20px;
-  padding: clamp(20px, 3vw, 32px);
-}
-
-.boarding__eyebrow {
-  margin: 0 0 6px;
-  color: var(--ck-amber);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-}
-
-.boarding__title {
-  margin: 0;
-  font-size: clamp(22px, 2.4vw, 28px);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.boarding__description {
-  max-width: 60ch;
-  margin: -8px 0 0;
-  color: var(--ck-muted);
-  font-size: 14px;
-}
-
-.boarding__crew {
-  display: inline-flex;
-  justify-self: start;
-  gap: 4px;
-  margin: 0;
-  padding: 4px;
-  border: 0;
-  border-radius: 14px;
-  background: rgb(255 255 255 / 0.05);
-}
-
-.boarding__crew-option {
-  position: relative;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 10px;
-  color: var(--ck-muted);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.boarding__crew-option input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.boarding__crew-option small {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  opacity: 0.7;
-}
-
-.boarding__crew-option:has(input:checked) {
-  background: rgb(255 255 255 / 0.12);
-  color: #fff;
-}
-
-.boarding__crew-option:has(input:focus-visible) {
-  outline: 2px solid var(--ck-cyan);
-  outline-offset: 2px;
-}
-
-.boarding__seats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.boarding__seat {
-  display: grid;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid var(--ck-line);
-  border-radius: 18px;
-  background: rgb(255 255 255 / 0.025);
-  box-shadow: inset 3px 0 0 var(--seat-color);
-}
-
-.boarding__seat:last-child {
-  --seat-color: var(--ck-p2);
-}
-
-.boarding__seat-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.boarding__seat-head h3 {
-  margin: 0;
-  font-size: 16px;
-}
-
-.boarding__seat-role {
-  color: var(--ck-muted);
-  font-size: 12px;
-}
-
-.boarding__seat-body {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.keys--large .key {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  font-size: 15px;
-}
-
-.boarding__legend {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  font-size: 13px;
-}
-
-.boarding__legend div {
-  display: flex;
-  gap: 10px;
-}
-
-.boarding__legend dt {
-  min-width: 14px;
-  color: var(--seat-color);
-  font-weight: 800;
-}
-
-.boarding__legend dd {
-  margin: 0;
-  color: #c3ccd6;
-}
-
-.boarding__note {
-  margin: 0;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--ck-amber) 8%, transparent);
-  color: #e9d6b4;
-  font-size: 13px;
-}
-
-.boarding__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.boarding__button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 112px;
-  height: 44px;
-  padding: 0 20px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
-}
-
-.boarding__button--ghost {
-  border-color: var(--ck-line);
-  background: transparent;
-  color: var(--ck-text);
-}
-
-.boarding__button--ghost:hover {
-  background: rgb(255 255 255 / 0.06);
-}
-
-.boarding__button--primary {
-  background: #3182f6;
-  color: #fff;
-}
-
-.boarding__button--primary:hover {
-  background: #1b64da;
-}
-
-@media (max-width: 760px) {
-  .boarding__seats {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .boarding {
-    transition: none;
-  }
-}
+@media (max-width: 360px) { .boarding__seat-body { grid-template-columns: 1fr; } }

@@ -15,76 +15,53 @@
   </head>
   <body>
     <main class="cockpit" data-cockpit data-crew="solo">
-      <h1 class="visually-hidden">조종석</h1>
+      <header class="cockpit__overhead">
+        <a class="cockpit__brand" href="/" aria-label="EnjoyTrip 홈">EnjoyTrip<span>비행</span></a>
+        <div class="cockpit__session"><h1>서울 상공</h1><span class="cockpit__badge" data-flight-status role="status">탑승 대기</span></div>
+        <nav class="cockpit__actions" aria-label="비행 메뉴">
+          <button class="cockpit__action" type="button" data-flight-pause aria-pressed="false">일시정지</button>
+          <button class="cockpit__action" type="button" data-boarding-open>조작 안내</button>
+          <a class="cockpit__action cockpit__action--exit" href="/flight">나가기 <span aria-hidden="true">↗</span></a>
+        </nav>
+      </header>
 
-      <section class="cockpit__windshield" aria-label="전방 유리창">
+      <section class="cockpit__windshield" aria-label="비행 지도 · 북쪽이 위쪽">
         <div class="flight-map" data-flight-map></div>
-        <p class="flight-map__status" role="status"></p>
-        <div class="cockpit__glass" aria-hidden="true"></div>
-        <div class="hud" data-hud aria-hidden="true"></div>
-        <div class="cockpit__frame" aria-hidden="true">
-          <span class="cockpit__pillar cockpit__pillar--left"></span>
-          <span class="cockpit__pillar cockpit__pillar--right"></span>
+        <div class="flight-map__feedback">
+          <p class="flight-map__status" role="status"></p>
+          <button class="cockpit__action" type="button" data-map-retry hidden>다시 불러오기</button>
         </div>
-        <header class="cockpit__overhead">
-          <a class="cockpit__brand" href="/">
-            <span>EnjoyTrip Air</span>
-            <small>FLIGHT DECK</small>
-          </a>
-          <span class="cockpit__badge" title="화면 미리보기용 예시 데이터">MOCK</span>
-          <nav class="cockpit__actions" aria-label="비행 메뉴">
-            <button class="cockpit__action" type="button" data-boarding-open>조작 안내</button>
-            <a class="cockpit__action cockpit__action--exit" href="/flight">비행 종료</a>
-          </nav>
-        </header>
+        <div class="hud" data-hud aria-hidden="true"></div>
+        <div class="cockpit__map-caption"><span>서울시청에서 출발</span><span>북쪽 기준 · 항공뷰</span></div>
       </section>
 
       <section class="panel" aria-label="계기판">
-        <div class="panel__hood" aria-hidden="true"></div>
+        <header class="panel__header"><h2>비행 조작</h2><p>키보드 또는 화면 버튼을 길게 누르세요</p></header>
         <div class="panel__deck">
           <section class="seat seat--p1" aria-labelledby="seat-p1-title">
             <header class="seat__header">
               <span class="seat__badge">P1</span>
-              <h2 id="seat-p1-title" class="seat__title">핸들</h2>
+              <h3 id="seat-p1-title" class="seat__title">방향 조절</h3>
               <span class="seat__role"><span data-crew-only="duo">기장석</span><span data-crew-only="solo">왼손</span> · 방향</span>
             </header>
             <div class="seat__body">
               <div class="control" data-yoke>
                 <div class="keys keys--wasd" role="group" aria-label="핸들 키">
-                  <kbd class="key" data-key="KeyW">W</kbd>
-                  <kbd class="key" data-key="KeyA">A</kbd>
-                  <kbd class="key" data-key="KeyS">S</kbd>
-                  <kbd class="key" data-key="KeyD">D</kbd>
+                  <button class="key" type="button" data-key="KeyW" aria-label="기수 내림">W</button>
+                  <button class="key" type="button" data-key="KeyA" aria-label="왼쪽 선회">A</button>
+                  <button class="key" type="button" data-key="KeyS" aria-label="기수 올림">S</button>
+                  <button class="key" type="button" data-key="KeyD" aria-label="오른쪽 선회">D</button>
                 </div>
-                <p class="control__legend">W·S 기수 · A·D 선회</p>
+                <p class="control__legend">W·S 기수 · A·D / ←·→ 선회</p>
               </div>
               <div class="display" data-pfd></div>
-            </div>
-          </section>
-
-          <section class="mfd" aria-labelledby="nearby-title" data-nearby>
-            <div class="mfd__screen">
-              <header class="mfd__header">
-                <h2 id="nearby-title" class="mfd__title">주변 정보</h2>
-                <span class="mfd__meta">반경 2km · 예시</span>
-                <div class="mfd__filters" role="group" aria-label="분류">
-                  <button class="mfd__filter" type="button" data-filter="all" aria-pressed="true">전체</button>
-                  <button class="mfd__filter" type="button" data-filter="AT4" aria-pressed="false">관광</button>
-                  <button class="mfd__filter" type="button" data-filter="FD6" aria-pressed="false">음식</button>
-                  <button class="mfd__filter" type="button" data-filter="AD5" aria-pressed="false">숙소</button>
-                </div>
-              </header>
-              <div class="mfd__body">
-                <div class="mfd__radar" data-nearby-radar></div>
-                <ol class="mfd__list" data-nearby-list aria-label="가까운 순 장소"></ol>
-              </div>
             </div>
           </section>
 
           <section class="seat seat--p2" aria-labelledby="seat-p2-title">
             <header class="seat__header">
               <span class="seat__badge">P2</span>
-              <h2 id="seat-p2-title" class="seat__title">페달</h2>
+              <h3 id="seat-p2-title" class="seat__title">속도 조절</h3>
               <span class="seat__role"><span data-crew-only="duo">부기장석</span><span data-crew-only="solo">오른손</span> · 속도</span>
             </header>
             <div class="seat__body">
@@ -92,13 +69,13 @@
               <div class="control">
                 <div class="pedals">
                   <div class="pedal pedal--decel" data-key="ArrowDown">
-                    <span class="pedal__plate"></span>
-                    <kbd class="key" data-key="ArrowDown"><span aria-hidden="true">↓</span><span class="visually-hidden">아래 방향키</span></kbd>
+
+                    <button class="key" type="button" data-key="ArrowDown" aria-label="감속"><span aria-hidden="true">↓</span><span class="visually-hidden">아래 방향키</span></button>
                     <span class="pedal__label">감속</span>
                   </div>
                   <div class="pedal pedal--accel" data-key="ArrowUp">
-                    <span class="pedal__plate"></span>
-                    <kbd class="key" data-key="ArrowUp"><span aria-hidden="true">↑</span><span class="visually-hidden">위 방향키</span></kbd>
+
+                    <button class="key" type="button" data-key="ArrowUp" aria-label="가속"><span aria-hidden="true">↑</span><span class="visually-hidden">위 방향키</span></button>
                     <span class="pedal__label">가속</span>
                   </div>
                 </div>
@@ -108,13 +85,32 @@
         </div>
       </section>
 
+      <aside class="mfd" aria-labelledby="nearby-title" data-nearby>
+        <div class="mfd__screen">
+          <header class="mfd__header">
+            <h2 id="nearby-title" class="mfd__title">주변 둘러보기</h2>
+            <span class="mfd__meta">서울시청 기준 · 예시</span>
+            <div class="mfd__filters" role="group" aria-label="분류">
+              <button class="mfd__filter" type="button" data-filter="all" aria-pressed="true">전체</button>
+              <button class="mfd__filter" type="button" data-filter="AT4" aria-pressed="false">관광</button>
+              <button class="mfd__filter" type="button" data-filter="FD6" aria-pressed="false">음식</button>
+              <button class="mfd__filter" type="button" data-filter="AD5" aria-pressed="false">숙소</button>
+            </div>
+          </header>
+          <div class="mfd__body">
+            <div class="mfd__radar" data-nearby-radar aria-hidden="true"></div>
+            <ol class="mfd__list" data-nearby-list aria-label="가까운 순 장소"></ol>
+          </div>
+        </div>
+      </aside>
+
       <dialog class="boarding" data-boarding aria-labelledby="boarding-title" aria-describedby="boarding-description">
         <form class="boarding__form" method="dialog">
           <div>
-            <p class="boarding__eyebrow">BOARDING · 탑승 안내</p>
-            <h2 id="boarding-title" class="boarding__title">조종석에 탑승합니다</h2>
+            <p class="boarding__eyebrow">비행 준비</p>
+            <h2 id="boarding-title" class="boarding__title">서울 상공을 직접 비행하세요</h2>
           </div>
-          <p id="boarding-description" class="boarding__description">한 사람은 핸들로 방향을, 다른 사람은 페달로 속도를 맡습니다. 혼자라면 양손으로 둘 다 조작하세요.</p>
+          <p id="boarding-description" class="boarding__description">방향과 속도를 조절하면 비행기가 이동하고 지도가 따라갑니다. 서울시청에서 출발합니다.</p>
 
           <fieldset class="boarding__crew">
             <legend class="visually-hidden">탑승 인원</legend>
@@ -139,8 +135,8 @@
                 <dl class="boarding__legend">
                   <div><dt>W</dt><dd>핸들 밀기 · 기수 내림</dd></div>
                   <div><dt>S</dt><dd>핸들 당기기 · 기수 올림</dd></div>
-                  <div><dt>A</dt><dd>왼쪽으로 기울여 선회</dd></div>
-                  <div><dt>D</dt><dd>오른쪽으로 기울여 선회</dd></div>
+                  <div><dt>A / ←</dt><dd>누르는 동안 왼쪽 선회</dd></div>
+                  <div><dt>D / →</dt><dd>누르는 동안 오른쪽 선회</dd></div>
                 </dl>
               </div>
             </section>
@@ -163,11 +159,11 @@
             </section>
           </div>
 
-          <p class="boarding__note">지금은 화면 미리보기입니다. 계기는 조작에 반응하지만 지도는 아직 움직이지 않습니다. 키를 눌러 미리 확인해보세요.</p>
+          <p class="boarding__note">화면의 조작 버튼을 길게 눌러도 비행할 수 있습니다. 조작 안내를 열거나 다른 탭으로 이동하면 비행이 잠시 멈춥니다.</p>
 
           <div class="boarding__actions">
             <a class="boarding__button boarding__button--ghost" href="/flight">돌아가기</a>
-            <button class="boarding__button boarding__button--primary" value="board" autofocus>탑승하기</button>
+            <button class="boarding__button boarding__button--primary" value="board" autofocus>비행 시작 <span aria-hidden="true">→</span></button>
           </div>
         </form>
       </dialog>
