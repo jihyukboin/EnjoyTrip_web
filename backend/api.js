@@ -15,8 +15,9 @@ import { createApiRouter } from './http/api-router.js';
 import { createNearbyService } from './nearby/service.js';
 import { createNearbyRoutes } from './nearby/routes.js';
 import { createFlightRoutes } from './flights/routes.js';
+import { createRoutingService } from './flights/routing.js';
 
-export function createApi({ db, config, now = Date.now, rateLimit, nearby = createNearbyService({ key: config.tourApiServiceKey, now }) }) {
+export function createApi({ db, config, now = Date.now, rateLimit, nearby = createNearbyService({ key: config.tourApiServiceKey, now }), routing = createRoutingService({ db, key: config.kakaoRestApiKey, now }) }) {
   const members = createMemberRepository(db);
   const auth = createAuthRepository(db);
   const authService = createAuthService({ db, members, auth, now });
@@ -29,7 +30,7 @@ export function createApi({ db, config, now = Date.now, rateLimit, nearby = crea
     ...createAdminRoutes({ admin }),
     ...createNoticeRoutes({ notices }),
     ...createNearbyRoutes({ nearby }),
-    ...createFlightRoutes({ db, auth: authService, posts, now })
+    ...createFlightRoutes({ db, auth: authService, posts, now, routing })
   ]);
   return createApiRouter({ config, members: memberService, auth: authService, now, rateLimit, extraRoutes });
 }

@@ -116,10 +116,13 @@ APP_ORIGIN=http://127.0.0.1:3000
 DB_PATH=backend/data/enjoytrip.sqlite
 COOKIE_SECURE=false
 KAKAO_MAP_JAVASCRIPT_KEY=your_kakao_javascript_key
+KAKAO_REST_API_KEY=your_kakao_rest_api_key
 TOUR_API_SERVICE_KEY=your_data_go_kr_service_key
 ```
 
 Kakao 개발자 콘솔에서 **카카오맵 사용 설정**을 켜고 실제 접속 주소를 웹 도메인에 등록하세요. 예를 들어 `http://localhost:3000`과 `http://127.0.0.1:3000`은 각각 등록해야 합니다. 주소 좌표 변환에 지도 SDK의 `services` 라이브러리를 사용합니다.
+
+REST 키는 서버에서 도보·자동차·대중교통 경로 계산에 사용하며 브라우저에 전달하지 않습니다. 종료 후 저장된 플레이 기록에서 실제 이동 경로를 확인할 수 있습니다. 경로 계산 실패 시 기록은 유지하고 재계산 버튼을 제공합니다. API별 무료량 80% 차단은 이 서버의 SQLite 집계 기준이며, 같은 앱의 다른 서비스 호출은 포함하지 않습니다. 상세 계약과 배포 조건은 [API 명세](docs/API_ENDPOINTS.md#경로-계산-환경변수와-배포)를 참고하세요.
 
 ### 3. 실행 및 테스트
 

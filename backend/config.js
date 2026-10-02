@@ -29,5 +29,6 @@ export function readConfig(env = process.env) {
   const kakaoMapJavascriptKey = env.KAKAO_MAP_JAVASCRIPT_KEY?.trim() || env.KAKAO_MAP_KEY?.trim() || '';
   const kakaoMapKey = kakaoMapJavascriptKey;
   const tourApiServiceKey = env.TOUR_API_SERVICE_KEY?.trim() || '';
-  return { host, port, origin: originUrl.origin, databasePath, secureCookies, kakaoMapJavascriptKey, kakaoMapKey, tourApiServiceKey };
+  const kakaoRestApiKey = env.KAKAO_REST_API_KEY?.trim() || '';
+  return { host, port, origin: originUrl.origin, databasePath, secureCookies, kakaoMapJavascriptKey, kakaoMapKey, tourApiServiceKey, kakaoRestApiKey };
 }

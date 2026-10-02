@@ -39,7 +39,9 @@ test('비행 기록은 좌표·경유지·플레이 수치와 허용 필드만 �
 test('항공권 기록은 로그인별로 저장·조회하고 같은 비행의 재저장을 중복하지 않는다', async t => {
   const db = openDatabase(':memory:');
   const config = { origin: '', secureCookies: false };
-  const server = createServer(createRequestHandler({ apiHandler: createApi({ db, config, rateLimit: { limit: 100 } }) }));
+  let routingCalls = 0;
+  const routing = { calculate: async mode => { routingCalls++; await new Promise(resolve => setTimeout(resolve, 20)); return { mode, status: mode === 'walk' ? 'ready' : 'unavailable', distanceMeters: 100, durationSeconds: 60, lines: [] }; } };
+  const server = createServer(createRequestHandler({ apiHandler: createApi({ db, config, routing, rateLimit: { limit: 100 } }) }));
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   config.origin = `http://127.0.0.1:${server.address().port}`;
   t.after(async () => { await new Promise(resolve => server.close(resolve)); db.close(); });
@@ -59,12 +61,21 @@ test('항공권 기록은 로그인별로 저장·조회하고 같은 비행의 
   assert.equal((await call(path)).status, 401);
   assert.equal((await call(path, 'POST', body())).status, 401);
   const flight = body();
-  const saved = await call(path, 'POST', flight, first);
+  const [saved, simultaneous] = await Promise.all([call(path, 'POST', flight, first), call(path, 'POST', flight, first)]);
+  assert.equal(simultaneous.json.data.record.id, saved.json.data.record.id);
   assert.equal(saved.status, 201);
+  assert.equal(saved.json.data.record.routes.length, 3);
+  assert.equal(routingCalls, 3);
   assert.deepEqual(saved.json.data.record.waypoints, flight.waypoints);
   assert.equal((await call(path, 'POST', flight, first)).json.data.record.id, saved.json.data.record.id);
+  assert.equal(routingCalls, 3);
+  const retryPath = `${path}/${saved.json.data.record.id}/routes`;
+  assert.equal((await call(retryPath, 'POST', {}, first)).status, 200);
+  assert.equal(routingCalls, 5); // Already calculated walking route is not charged again.
   assert.equal(db.prepare('SELECT count(*) AS n FROM flight_records').get().n, 1);
   const second = await member('pilottwo');
+  assert.equal((await call(retryPath, 'POST', {}, second)).status, 403);
+  assert.equal(routingCalls, 5);
   assert.equal((await call(path, 'GET', undefined, second)).json.data.records.length, 0);
   const secondSaved = await call(path, 'POST', body(), second);
   assert.equal(secondSaved.status, 201);

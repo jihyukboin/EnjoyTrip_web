@@ -1,5 +1,6 @@
 import { listFlights, deleteFlight } from '../../api/flight-api.js';
 import { getPost } from '../../api/post-api.js';
+import { createRecordRoutes } from './record-routes.js';
 
 const node = (tag, text) => { const element = document.createElement(tag); element.textContent = text; return element; };
 export async function initializeFlightRecords() {
@@ -39,7 +40,7 @@ export async function initializeFlightRecords() {
         }
       });
       actions.append(player, remove);
-      item.append(date, summary, itinerary, actions);
+      item.append(date, summary, itinerary, createRecordRoutes(id, record), actions);
       return item;
     }));
     status.textContent = records.length ? '최근 플레이 기록 20개까지 표시합니다.' : '아직 저장된 플레이 기록이 없습니다.';

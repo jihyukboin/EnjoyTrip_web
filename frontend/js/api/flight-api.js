@@ -6,3 +6,5 @@ export const listFlights = async postId =>
   (await request(`/api/posts/${encodeURIComponent(postId)}/flight-records`)).records;
 export const deleteFlight = (postId, recordId) =>
   request(`/api/posts/${encodeURIComponent(postId)}/flight-records/${encodeURIComponent(recordId)}`, { method: 'DELETE', body: {} });
+export const calculateFlightRoutes = async (postId, recordId) =>
+  (await request(`/api/posts/${encodeURIComponent(postId)}/flight-records/${encodeURIComponent(recordId)}/routes`, { method: 'POST', body: {} })).record;

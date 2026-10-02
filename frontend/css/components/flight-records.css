@@ -16,6 +16,18 @@
 .flight-records__actions button:hover { border-color: #e5baba; background: #fff4f4; }
 .flight-records__actions button:focus-visible { outline: 2px solid #3182f6; outline-offset: 3px; }
 .flight-records__actions button:disabled { opacity: .5; cursor: wait; }
+.flight-records__routes { margin-top: 24px; padding-top: 20px; border-top: 1px solid #d9dfe5; }
+.flight-records__modes { display: flex; flex-wrap: wrap; gap: 8px; }
+.flight-records__modes button, .flight-records__retry { padding: 10px 16px; border: 1px solid #d9dfe5; border-radius: 10px; background: #fff; color: #4e5968; font: inherit; font-weight: 600; cursor: pointer; }
+.flight-records__modes button[aria-pressed="true"] { border-color: #3182f6; background: #e8f1ff; color: #1764c0; }
+.flight-records__routes button:focus-visible { outline: 2px solid #3182f6; outline-offset: 3px; }
+.flight-records__routes button:disabled { opacity: .5; cursor: wait; }
+.flight-records__map { height: 280px; border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+.flight-records__routes [hidden] { display: none; }
+.flight-records__map-label { display: flex; align-items: center; gap: 8px; max-width: 220px; padding: 8px 12px; border: 1px solid #d5e5fa; border-radius: 10px; background: #fff; color: #333d4b; box-shadow: 0 3px 12px #183a6220; font-size: 12px; line-height: 1.4; }
+.flight-records__map-label strong { flex-shrink: 0; color: #1764c0; }
+.flight-records__map-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flight-records__map-label[data-kind="end"] strong { color: #a15b1b; }
 @media (max-width: 639px) {
   .flight-records > ol > li { padding: 24px; }
   .flight-records h2 { font-size: 20px; }

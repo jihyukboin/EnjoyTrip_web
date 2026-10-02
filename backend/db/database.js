@@ -104,7 +104,14 @@ export function openDatabase(path) {
       });
       version = 9;
     }
-    if (version !== 9) throw new Error('Unsupported database schema version.');
+    if (version === 9) {
+      transaction(db, () => {
+        db.exec(readSql('routing-quota.sql'));
+        db.exec('PRAGMA user_version = 10');
+      });
+      version = 10;
+    }
+    if (version !== 10) throw new Error('Unsupported database schema version.');
     return db;
   } catch (error) {
     db.close();
