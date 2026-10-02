@@ -28,5 +28,6 @@ export function readConfig(env = process.env) {
   }
   const kakaoMapJavascriptKey = env.KAKAO_MAP_JAVASCRIPT_KEY?.trim() || env.KAKAO_MAP_KEY?.trim() || '';
   const kakaoMapKey = kakaoMapJavascriptKey;
-  return { host, port, origin: originUrl.origin, databasePath, secureCookies, kakaoMapJavascriptKey, kakaoMapKey };
+  const tourApiServiceKey = env.TOUR_API_SERVICE_KEY?.trim() || '';
+  return { host, port, origin: originUrl.origin, databasePath, secureCookies, kakaoMapJavascriptKey, kakaoMapKey, tourApiServiceKey };
 }

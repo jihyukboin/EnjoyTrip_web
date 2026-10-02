@@ -12,8 +12,10 @@ import { createNoticeRepository } from './notices/repository.js';
 import { createNoticeService } from './notices/service.js';
 import { createNoticeRoutes } from './notices/routes.js';
 import { createApiRouter } from './http/api-router.js';
+import { createNearbyService } from './nearby/service.js';
+import { createNearbyRoutes } from './nearby/routes.js';
 
-export function createApi({ db, config, now = Date.now, rateLimit }) {
+export function createApi({ db, config, now = Date.now, rateLimit, nearby = createNearbyService({ key: config.tourApiServiceKey, now }) }) {
   const members = createMemberRepository(db);
   const auth = createAuthRepository(db);
   const authService = createAuthService({ db, members, auth, now });
@@ -24,7 +26,8 @@ export function createApi({ db, config, now = Date.now, rateLimit }) {
   const extraRoutes = new Map([
     ...createPostRoutes({ posts, auth: authService }),
     ...createAdminRoutes({ admin }),
-    ...createNoticeRoutes({ notices })
+    ...createNoticeRoutes({ notices }),
+    ...createNearbyRoutes({ nearby })
   ]);
   return createApiRouter({ config, members: memberService, auth: authService, now, rateLimit, extraRoutes });
 }

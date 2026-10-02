@@ -1,11 +1,21 @@
-// 중앙 디스플레이: 지나가는 곳 주변의 관광명소·음식점·숙소(MOCK)
-// 나중에 주변 정보 API 결과를 같은 모양({ name, category, bearing, distance })으로 넣는다
+// 비행 위치 반경 2km의 관광명소·음식점·숙소를 표시한다.
+import { getNearby } from '../../api/nearby-api.js';
 import { element, writer } from './dom.js';
 import { clockPosition, formatDistance } from './format.js';
-import { MOCK_PLACES, PLACE_CATEGORIES } from './mock.js';
+import { PLACE_CATEGORIES } from './mock.js';
 import { createRadar } from './radar.js';
 
 const LIST_LIMIT = 5;
+const REFRESH_MS = 20000;
+const STATIONARY_REFRESH_MS = 300000;
+const MOVE_KM = 0.4;
+const RAD = Math.PI / 180;
+
+function traveled(a, b) {
+  const north = (a.lat - b.lat) * 111.2;
+  const east = (a.lng - b.lng) * 111.2 * Math.cos(a.lat * RAD);
+  return Math.hypot(north, east);
+}
 
 function placeItem(place) {
   const category = PLACE_CATEGORIES[place.category];
@@ -29,36 +39,73 @@ function placeItem(place) {
 }
 
 export function createNearby(section) {
-  const places = [...MOCK_PLACES].sort((a, b) => a.distance - b.distance);
-  const radar = createRadar(places);
+  let places = [];
+  let radar = createRadar(places);
+  const radarHost = section.querySelector('[data-nearby-radar]');
+  const meta = section.querySelector('.mfd__meta');
   const list = section.querySelector('[data-nearby-list]');
   const filters = section.querySelectorAll('[data-filter]');
   let items = [];
   let heading = 0;
+  let selected = 'all';
+  let lastRequest = 0;
+  let lastPosition;
+  let pending = false;
 
-  section.querySelector('[data-nearby-radar]').append(radar.element);
+  radarHost.append(radar.element);
 
   function show(category) {
+    selected = category;
     filters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.filter === category)));
     radar.filter(category);
     items = places.filter(place => category === 'all' || place.category === category)
       .slice(0, LIST_LIMIT).map(placeItem);
     items.forEach(entry => entry.update(heading));
     list.replaceChildren(...items.map(entry => entry.item));
-    if (!items.length) list.append(element('li', 'mfd__empty', '주변에 표시할 장소가 없습니다.'));
+    if (!items.length) list.append(element('li', 'mfd__empty', '반경 2km 안에 표시할 장소가 없습니다.'));
+  }
+
+  async function refresh(position) {
+    pending = true;
+    lastRequest = performance.now();
+    lastPosition = { ...position };
+    meta.textContent = '현재 위치 기준 · 조회 중';
+    try {
+      places = await getNearby(position);
+      radar = createRadar(places);
+      radarHost.replaceChildren(radar.element);
+      show(selected);
+      radar.update(heading);
+      meta.textContent = '현재 위치 기준 · 2km';
+    } catch {
+      places = [];
+      radar = createRadar(places);
+      radarHost.replaceChildren(radar.element);
+      show(selected);
+      radar.update(heading);
+      meta.textContent = '주변 장소 조회 실패';
+      list.replaceChildren(element('li', 'mfd__empty', '주변 장소를 불러오지 못했습니다. 잠시 후 다시 시도합니다.'));
+    } finally {
+      pending = false;
+    }
   }
 
   section.addEventListener('click', event => {
     const button = event.target.closest('[data-filter]');
     if (button) show(button.dataset.filter);
   });
-  show('all');
+  list.replaceChildren(element('li', 'mfd__empty', '주변 장소를 불러오는 중입니다.'));
 
   return {
     update(state) {
       heading = state.heading;
       radar.update(heading);
       items.forEach(entry => entry.update(heading));
+      const now = performance.now();
+      if (!pending && (!lastPosition || (now - lastRequest >= REFRESH_MS && traveled(lastPosition, state.position) >= MOVE_KM) ||
+          now - lastRequest >= STATIONARY_REFRESH_MS)) {
+        void refresh(state.position);
+      }
     }
   };
 }

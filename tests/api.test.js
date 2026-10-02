@@ -24,6 +24,20 @@ test('지도 설정 API는 공개 JavaScript 키만 제공하고 미설정이면
   assert.deepEqual(result.json, { data: { javascriptKey: 'example-javascript-key' } });
 });
 
+test('주변 조회 API는 좌표를 검증하고 서비스 결과만 반환한다', async t => {
+  const calls = [];
+  const api = await fixture(t, { nearby: async position => {
+    calls.push(position);
+    return [{ name: '실제 장소', category: 'AT4', distance: 0.2, bearing: 90 }];
+  } });
+  assert.equal((await api.call('/api/nearby?lat=&lng=127')).status, 400);
+  assert.equal((await api.call('/api/nearby?lat=91&lng=127')).status, 400);
+  const result = await api.call('/api/nearby?lat=37.5&lng=127');
+  assert.equal(result.status, 200);
+  assert.deepEqual(calls, [{ lat: 37.5, lng: 127 }]);
+  assert.deepEqual(result.json.data.places[0].name, '실제 장소');
+});
+
 async function fixture(t, options = {}) {
   const db = options.db ?? openDatabase(':memory:');
   const config = { origin: '', secureCookies: false, ...options.config };
