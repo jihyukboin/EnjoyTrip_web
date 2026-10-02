@@ -1,15 +1,30 @@
 import { createServer } from 'node:http';
-import { handleRequest } from './app.js';
+import { createRequestHandler } from './app.js';
+import { readConfig } from './config.js';
+import { openDatabase } from './db/database.js';
+import { createApi } from './api.js';
 
-const host = process.env.HOST ?? '127.0.0.1';
-const port = Number(process.env.PORT ?? 3000);
+const config = readConfig();
+const { host, port } = config;
+const db = openDatabase(config.databasePath);
 
-const server = createServer(handleRequest);
+const server = createServer(createRequestHandler({ apiHandler: createApi({ db, config }) }));
+server.once('close', () => { if (db.isOpen) db.close(); });
 
 server.on('error', (error) => {
   console.error('서버를 실행하지 못했습니다:', error.message);
   process.exitCode = 1;
+  if (db.isOpen) db.close();
 });
+
+let stopping = false;
+const shutdown = () => {
+  if (stopping) return;
+  stopping = true;
+  server.close();
+};
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 server.listen(port, host, () => {
   console.log(`EnjoyTrip: http://${host}:${port}`);

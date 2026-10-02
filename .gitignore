@@ -4,3 +4,9 @@ node_modules/
 !.env.example
 *.log
 .DS_Store
+backend/data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite.bak
