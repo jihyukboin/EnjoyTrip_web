@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>마이페이지 | EnjoyTrip</title>
+    <!-- document-head -->
+    <link rel="stylesheet" href="/css/components/form.css">
+    <link rel="stylesheet" href="/css/components/mypage.css">
+  </head>
+  <body>
+    <!-- site-header -->
+    <main>
+      <noscript><p class="page-noscript">마이페이지를 보려면 JavaScript를 켜 주세요.</p></noscript>
+      <div class="mypage" hidden>
+        <h1 class="mypage__title">마이페이지</h1>
+
+        <section class="mypage__card" aria-labelledby="profile-title">
+          <h2 id="profile-title" class="mypage__heading">내 정보</h2>
+          <div class="mypage__profile">
+            <span class="avatar" data-profile="avatar" aria-hidden="true"></span>
+            <div>
+              <p class="mypage__name" data-profile="name"></p>
+              <p class="mypage__id" data-profile="id"></p>
+            </div>
+          </div>
+          <dl class="mypage__details">
+            <div>
+              <dt>이메일</dt>
+              <dd data-profile="email"></dd>
+            </div>
+            <div>
+              <dt>가입일</dt>
+              <dd><time data-profile="joinedAt"></time></dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="mypage__card" aria-labelledby="edit-title">
+          <h2 id="edit-title" class="mypage__heading">정보 수정</h2>
+          <form class="form" data-edit-form novalidate>
+            <div class="form-field">
+              <label for="edit-id">아이디</label>
+              <input id="edit-id" name="id" autocomplete="username" readonly
+                aria-describedby="edit-id-hint">
+              <p id="edit-id-hint" class="form-field__hint">아이디는 변경할 수 없습니다.</p>
+            </div>
+            <div class="form-field">
+              <label for="edit-name">이름</label>
+              <input id="edit-name" name="name" autocomplete="name" required maxlength="30"
+                aria-describedby="edit-name-error">
+              <p id="edit-name-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="edit-email">이메일</label>
+              <input id="edit-email" name="email" type="email" autocomplete="email" required
+                aria-describedby="edit-email-error">
+              <p id="edit-email-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="edit-password">새 비밀번호</label>
+              <input id="edit-password" name="password" type="password" autocomplete="new-password" minlength="8"
+                aria-describedby="edit-password-hint edit-password-error">
+              <p id="edit-password-hint" class="form-field__hint">변경할 때만 입력하세요. 8자 이상</p>
+              <p id="edit-password-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="edit-password-confirm">새 비밀번호 확인</label>
+              <input id="edit-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password"
+                data-match="password" aria-describedby="edit-password-confirm-error">
+              <p id="edit-password-confirm-error" class="form-field__error"></p>
+            </div>
+            <p class="form-status" role="status"></p>
+            <div class="form-actions">
+              <button class="button button--primary" type="submit">저장</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="mypage__card mypage__card--danger" aria-labelledby="withdraw-title">
+          <h2 id="withdraw-title" class="mypage__heading">회원 탈퇴</h2>
+          <p class="mypage__text">탈퇴하면 회원 정보가 삭제되며 되돌릴 수 없습니다.</p>
+          <div class="form-actions">
+            <button class="button button--danger" type="button" data-withdraw-open>회원 탈퇴</button>
+          </div>
+        </section>
+
+        <dialog class="mypage__dialog" aria-labelledby="withdraw-dialog-title">
+          <form class="form" data-withdraw-form novalidate>
+            <h2 id="withdraw-dialog-title" class="mypage__heading">정말 탈퇴하시겠어요?</h2>
+            <p class="mypage__text">본인 확인을 위해 비밀번호를 입력해 주세요.</p>
+            <div class="form-field">
+              <label for="withdraw-password">비밀번호</label>
+              <input id="withdraw-password" name="password" type="password" autocomplete="current-password" required
+                aria-describedby="withdraw-password-error">
+              <p id="withdraw-password-error" class="form-field__error"></p>
+            </div>
+            <p class="form-status" role="status"></p>
+            <div class="form-actions">
+              <button class="button button--secondary" type="button" data-withdraw-cancel>취소</button>
+              <button class="button button--danger-solid" type="submit">탈퇴하기</button>
+            </div>
+          </form>
+        </dialog>
+      </div>
+    </main>
+  </body>
+</html>

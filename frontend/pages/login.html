@@ -5,9 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>로그인 | EnjoyTrip</title>
     <!-- document-head -->
+    <link rel="stylesheet" href="/css/components/form.css">
+    <link rel="stylesheet" href="/css/components/auth.css">
   </head>
   <body>
     <!-- site-header -->
-    <main></main>
+    <main>
+      <noscript><p class="page-noscript">로그인하려면 JavaScript를 켜 주세요.</p></noscript>
+      <div class="auth" hidden>
+        <section class="auth__view" data-auth-view="login" aria-labelledby="login-title">
+          <h1 id="login-title" class="auth__title" tabindex="-1">로그인</h1>
+          <p class="auth__description">EnjoyTrip 계정으로 여행을 시작하세요.</p>
+          <form class="form" data-auth-form="login" novalidate>
+            <div class="form-field">
+              <label for="login-id">아이디</label>
+              <input id="login-id" name="id" autocomplete="username" required
+                aria-describedby="login-id-error">
+              <p id="login-id-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="login-password">비밀번호</label>
+              <input id="login-password" name="password" type="password" autocomplete="current-password" required
+                aria-describedby="login-password-error">
+              <p id="login-password-error" class="form-field__error"></p>
+            </div>
+            <p class="form-status" role="status"></p>
+            <button class="button button--primary button--block" type="submit">로그인</button>
+          </form>
+          <p class="auth__links">
+            <a href="#find-password">비밀번호 찾기</a>
+            <a href="#signup">회원가입</a>
+          </p>
+          <p class="auth__demo">체험 계정: ssafy / ssafy1234</p>
+        </section>
+
+        <section class="auth__view" data-auth-view="signup" aria-labelledby="signup-title" hidden>
+          <h1 id="signup-title" class="auth__title" tabindex="-1">회원가입</h1>
+          <p class="auth__description">몇 가지 정보만 입력하면 가입이 완료됩니다.</p>
+          <form class="form" data-auth-form="signup" novalidate>
+            <div class="form-field">
+              <label for="signup-id">아이디</label>
+              <input id="signup-id" name="id" autocomplete="username" required
+                minlength="4" maxlength="20" pattern="[a-z0-9]+" title="영문 소문자와 숫자만 사용할 수 있습니다."
+                aria-describedby="signup-id-hint signup-id-error">
+              <p id="signup-id-hint" class="form-field__hint">영문 소문자와 숫자 4~20자</p>
+              <p id="signup-id-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="signup-password">비밀번호</label>
+              <input id="signup-password" name="password" type="password" autocomplete="new-password" required
+                minlength="8" aria-describedby="signup-password-hint signup-password-error">
+              <p id="signup-password-hint" class="form-field__hint">8자 이상</p>
+              <p id="signup-password-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="signup-password-confirm">비밀번호 확인</label>
+              <input id="signup-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password"
+                required data-match="password" aria-describedby="signup-password-confirm-error">
+              <p id="signup-password-confirm-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="signup-name">이름</label>
+              <input id="signup-name" name="name" autocomplete="name" required maxlength="30"
+                aria-describedby="signup-name-error">
+              <p id="signup-name-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="signup-email">이메일</label>
+              <input id="signup-email" name="email" type="email" autocomplete="email" required
+                aria-describedby="signup-email-error">
+              <p id="signup-email-error" class="form-field__error"></p>
+            </div>
+            <p class="form-status" role="status"></p>
+            <button class="button button--primary button--block" type="submit">가입하기</button>
+          </form>
+          <p class="auth__links">
+            <span>이미 계정이 있나요?</span>
+            <a href="#login">로그인</a>
+          </p>
+        </section>
+
+        <section class="auth__view" data-auth-view="find-password" aria-labelledby="find-password-title" hidden>
+          <h1 id="find-password-title" class="auth__title" tabindex="-1">비밀번호 찾기</h1>
+          <p class="auth__description">아이디를 입력하면 임시 비밀번호를 발급합니다.</p>
+          <form class="form" data-auth-form="find-password" novalidate>
+            <div class="form-field">
+              <label for="find-password-id">아이디</label>
+              <input id="find-password-id" name="id" autocomplete="username" required
+                aria-describedby="find-password-id-error">
+              <p id="find-password-id-error" class="form-field__error"></p>
+            </div>
+            <p class="form-status" role="status"></p>
+            <button class="button button--primary button--block" type="submit">임시 비밀번호 발급</button>
+          </form>
+          <div class="auth__result" data-temporary-password-result hidden>
+            <p>임시 비밀번호가 발급되었습니다. 로그인 후 마이페이지에서 비밀번호를 변경하세요.</p>
+            <output class="auth__temporary-password" data-temporary-password></output>
+            <a class="button button--primary button--block" href="#login">로그인하러 가기</a>
+          </div>
+          <p class="auth__links">
+            <a href="#login">로그인으로 돌아가기</a>
+          </p>
+        </section>
+
+        <section class="auth__view" data-auth-view="account" aria-labelledby="account-title" hidden>
+          <span class="avatar" data-account-avatar aria-hidden="true"></span>
+          <h1 id="account-title" class="auth__title" tabindex="-1">
+            <span data-account-name></span>님, 로그인되어 있습니다
+          </h1>
+          <p class="auth__description" data-account-id></p>
+          <div class="auth__account-actions">
+            <a class="button button--primary button--block" href="/mypage">마이페이지</a>
+            <button class="button button--secondary button--block" type="button" data-logout>로그아웃</button>
+          </div>
+          <p class="form-status" role="status" data-account-status></p>
+        </section>
+      </div>
+    </main>
   </body>
 </html>

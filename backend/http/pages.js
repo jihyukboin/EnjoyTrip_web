@@ -6,6 +6,7 @@ const pages = new Map([
   ['/', new URL('../../frontend/index.html', import.meta.url)],
   ['/index.html', new URL('../../frontend/index.html', import.meta.url)],
   ['/login', new URL('../../frontend/pages/login.html', import.meta.url)],
+  ['/mypage', new URL('../../frontend/pages/mypage.html', import.meta.url)],
   ['/post', new URL('../../frontend/pages/post.html', import.meta.url)]
 ]);
 

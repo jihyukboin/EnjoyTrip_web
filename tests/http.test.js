@@ -31,7 +31,7 @@ test('최초 HTML 응답에 공통 헤더와 폰트 preload가 포함된다', as
   }
 });
 
-test('공통 헤더의 로그인 링크는 공통 헤더와 빈 메인이 있는 페이지로 이동한다', async () => {
+test('공통 헤더의 로그인 링크는 로그인·회원가입·비밀번호 찾기 화면이 있는 /login으로 이동한다', async () => {
   const home = await fetch(origin + '/');
   const homeHtml = await home.text();
   assert.match(homeHtml, /class="site-header__login site-header__desktop-login" href="\/login">로그인<\/a>/);
@@ -42,10 +42,43 @@ test('공통 헤더의 로그인 링크는 공통 헤더와 빈 메인이 있는
   assert.equal(response.status, 200);
   assert.ok(html.includes('<header class="site-header">'));
   assert.ok(html.includes('<title>로그인 | EnjoyTrip</title>'));
-  assert.match(html, /<main>\s*<\/main>/);
+  for (const view of ['login', 'signup', 'find-password', 'account']) {
+    assert.ok(html.includes(`data-auth-view="${view}"`), view);
+  }
+  assert.match(html, /<input id="login-id" name="id"[^>]*required/);
+  assert.match(html, /<input id="login-password" name="password" type="password"/);
+  assert.ok(html.includes('data-logout'));
+  assert.ok(html.includes('href="/css/components/auth.css"'));
   assert.ok(!html.includes('aria-current="page"'));
   assert.ok(!html.includes('data-home-link'));
   assert.ok(!html.includes('data-nav-link'));
+});
+
+test('/mypage는 내 정보 조회, 정보 수정, 회원 탈퇴 화면을 제공한다', async () => {
+  const response = await fetch(origin + '/mypage');
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.ok(html.includes('<header class="site-header">'));
+  assert.ok(html.includes('<title>마이페이지 | EnjoyTrip</title>'));
+  for (const slot of ['avatar', 'name', 'id', 'email', 'joinedAt']) {
+    assert.ok(html.includes(`data-profile="${slot}"`), slot);
+  }
+  assert.match(html, /<input id="edit-id" name="id"[^>]*readonly/);
+  assert.ok(html.includes('data-edit-form'));
+  assert.match(html, /<dialog class="mypage__dialog"[\s\S]*?data-withdraw-form/);
+  assert.ok(!html.includes('aria-current="page"'));
+
+  for (const path of [
+    '/css/components/form.css',
+    '/css/components/mypage.css',
+    '/js/components/mypage/index.js',
+    '/js/components/auth/index.js',
+    '/js/mock/member-api.js'
+  ]) {
+    const asset = await fetch(origin + path);
+    assert.equal(asset.status, 200, path);
+    await asset.arrayBuffer();
+  }
 });
 
 test('게시판 메뉴는 공통 헤더와 빈 메인이 있는 /post 페이지로 이동한다', async () => {
