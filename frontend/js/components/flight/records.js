@@ -1,6 +1,6 @@
 import { listFlights, deleteFlight } from '../../api/flight-api.js';
 import { getPost } from '../../api/post-api.js';
-import { createRecordRoutes } from './record-routes.js';
+import { createFlightResultSheet } from './result-sheet.js';
 
 const node = (tag, text) => { const element = document.createElement(tag); element.textContent = text; return element; };
 export async function initializeFlightRecords() {
@@ -13,6 +13,7 @@ export async function initializeFlightRecords() {
     const post = await getPost(id);
     root.querySelector('[data-record-title]').textContent = post.title;
     const records = await listFlights(id);
+    const sheet = createFlightResultSheet(root, id);
     const list = root.querySelector('[data-record-list]');
     list.replaceChildren(...records.map(record => {
       const item = node('li', '');
@@ -39,11 +40,18 @@ export async function initializeFlightRecords() {
           remove.disabled = false; remove.textContent = '경로 삭제';
         }
       });
-      actions.append(player, remove);
-      item.append(date, summary, itinerary, createRecordRoutes(id, record), actions);
+      const show = node('button', '이동 경로 보기'); show.type = 'button'; show.className = 'flight-records__show';
+      show.dataset.recordId = String(record.id);
+      show.addEventListener('click', () => sheet.open(record, next => { record = next; }));
+      actions.append(player, show, remove);
+      item.append(date, summary, itinerary, actions);
       return item;
     }));
     status.textContent = records.length ? '최근 플레이 기록 20개까지 표시합니다.' : '아직 저장된 플레이 기록이 없습니다.';
+    const selected = new URLSearchParams(location.search).get('record');
+    if (/^[1-9]\d{0,15}$/.test(selected ?? '')) {
+      list.querySelector(`[data-record-id="${selected}"]`)?.click();
+    }
   } catch (error) {
     status.textContent = error.message;
     root.querySelector('[data-record-login]').hidden = error.status !== 401;

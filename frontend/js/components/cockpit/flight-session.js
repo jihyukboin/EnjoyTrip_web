@@ -76,7 +76,7 @@ export function createFlightSession(cockpit, route, { isActive, canInteract, pau
   saveButton.addEventListener('click', async () => {
     if (saving) return;
     saving = true; saveButton.disabled = true; discard.hidden = true; status.textContent = '플레이 기록을 저장하고 이동 경로를 계산하고 있습니다…';
-    try { await saveFlight(route.post.id, currentBody()); location.assign(historyUrl); }
+    try { const record = await saveFlight(route.post.id, currentBody()); location.assign(`${historyUrl}&record=${record.id}`); }
     catch (error) {
       status.textContent = error.message;
       login.hidden = error.status !== 401;

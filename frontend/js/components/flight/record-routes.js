@@ -7,7 +7,7 @@ const node = (tag, text, className) => {
   if (className) element.className = className;
   return element;
 };
-export function createRecordRoutes(postId, initialRecord) {
+export function createRecordRoutes(postId, initialRecord, onChange = () => {}) {
   const root = node('section', '', 'flight-records__routes');
   root.setAttribute('aria-label', '저장된 이동 경로');
   const tabs = node('div', '', 'flight-records__modes');
@@ -59,7 +59,7 @@ export function createRecordRoutes(postId, initialRecord) {
   }
   retry.addEventListener('click', async () => {
     retry.disabled = true; retry.textContent = '경로 계산 중…';
-    try { record = await calculateFlightRoutes(postId, record.id); await render(); }
+    try { record = await calculateFlightRoutes(postId, record.id); onChange(record); await render(); }
     catch (error) { status.textContent = error.message; }
     finally { retry.disabled = false; retry.textContent = '미계산 경로 계산'; }
   });
