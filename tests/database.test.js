@@ -173,3 +173,27 @@ test('버전 4 회원의 관리자 기본값·0/1 제약·재시작 후 권한 �
     assert.equal(db.prepare('SELECT isAdmin FROM members WHERE id = 1').get().isAdmin, 1);
   } finally { if (db.isOpen) db.close(); }
 });
+
+test('버전 5 DB에 공지사항 테이블을 추가하고 기존 회원·게시글을 유지한다', t => {
+  const directory = mkdtempSync(join(tmpdir(), 'enjoytrip-db-'));
+  const path = join(directory, 'version5.sqlite');
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const legacy = new DatabaseSync(path);
+  legacy.exec(readFileSync(new URL('../backend/db/schema.sql', import.meta.url), 'utf8'));
+  legacy.exec(postsSchema);
+  legacy.exec('PRAGMA user_version = 5');
+  legacy.prepare('INSERT INTO members VALUES (?, ?, ?, ?, ?, ?, ?)').run(1, 'manager', '관리자', 'hash', 1, 2, 1);
+  legacy.prepare('INSERT INTO posts VALUES (?, ?, ?, ?, ?)').run(1, 1, '제목', '본문', 1);
+  legacy.close();
+  const db = openDatabase(path);
+  try {
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 6);
+    assert.equal(db.prepare('SELECT isAdmin FROM members WHERE id = 1').get().isAdmin, 1);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM posts').get().n, 1);
+    db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)').run('공지', '내용', 1, 1);
+    assert.throws(() => db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)')
+      .run('', '내용', 1, 1));
+    assert.throws(() => db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)')
+      .run('공지', 'a'.repeat(301), 1, 1));
+  } finally { db.close(); }
+});

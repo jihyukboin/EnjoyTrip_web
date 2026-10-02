@@ -1,9 +1,11 @@
 export function createPostRepository(db) {
   const insert = db.prepare('INSERT INTO posts(author_id, title, content, created_at) VALUES (?, ?, ?, ?)');
-  const count = db.prepare('SELECT count(*) AS total FROM posts');
+  const count = db.prepare('SELECT (SELECT count(*) FROM posts) + (SELECT count(*) FROM notices) AS total');
   const page = db.prepare(`SELECT p.id, p.title, p.content, p.created_at, m.username, m.name
     FROM posts p JOIN members m ON m.id = p.author_id
-    ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?`);
+    UNION ALL
+    SELECT id, title, content, created_at, NULL AS username, '공지사항' AS name FROM notices
+    ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`);
   return {
     create(authorId, { title, content }, time) {
       const id = Number(insert.run(authorId, title, content, time).lastInsertRowid);

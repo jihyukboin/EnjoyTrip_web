@@ -114,6 +114,16 @@ test('게시글 목록은 최신 글부터 20개씩 나누고 잘못된 페이�
   assert.equal((await listPosts(4)).posts.length, 0);
   await logOut();
   assert.equal((await listPosts(2)).posts[0].title, '글 21');
+  api.db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)')
+    .run('여행 안내', '안내 내용', 21_500, 21_500);
+  const mixed = await listPosts(2);
+  assert.equal(mixed.posts.length, 20);
+  assert.equal(mixed.posts[0].title, '여행 안내');
+  assert.equal(mixed.posts[0].content, '안내 내용');
+  assert.equal(mixed.posts[0].author.name, '공지사항');
+  assert.equal(mixed.posts[1].title, '글 21');
+  assert.equal(mixed.pagination.total, 42);
+  assert.deepEqual((await listPosts(3)).posts.map(post => post.title), ['글 2', '글 1']);
   for (const page of ['0', '-1', '1.5', 'abc', '']) {
     await assert.rejects(listPosts(page), error => error.status === 400 && error.field === 'page');
   }

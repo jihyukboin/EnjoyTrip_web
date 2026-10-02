@@ -15,8 +15,8 @@ const markCurrent = (html, currentPath) =>
 async function renderNoticeBanner(notice) {
   if (!notice) return '';
   const template = await readFile(new URL('./notice-banner.html', import.meta.url), 'utf8');
-  const values = { key: noticeKey(notice), title: notice.title, content: notice.content };
-  return template.replace(/{{(key|title|content)}}/g, (_, name) => escapeHtml(values[name]));
+  const values = { key: noticeKey(notice), title: notice.title };
+  return template.replace(/{{(key|title)}}/g, (_, name) => escapeHtml(values[name]));
 }
 
 // 로그인 상태에 따라 헤더의 계정 링크를 바꾼다

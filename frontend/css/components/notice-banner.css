@@ -1,45 +1,31 @@
-/* 공통 헤더 하단의 최신 공지 띠. 오른쪽 X로 닫는다. */
+/* 공통 헤더 하단의 최신 공지: [확성기] [제목] [닫기] 한 줄 */
 .notice-banner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 8px 8px 16px;
+  gap: 10px;
+  min-height: 40px;
+  padding: 4px 8px 4px 16px;
   border-top: 1px solid rgb(49 130 246 / 14%);
   background: #e8f3ff;
   color: #1b3a63;
-  font-weight: 400;
 }
 
-.notice-banner[hidden] {
-  display: none;
+.notice-banner__icon {
+  flex-shrink: 0;
+  color: #3182f6;
 }
 
-.notice-banner__text {
+/* 긴 제목은 한 줄에서 말줄임 처리한다 */
+.notice-banner__title {
   flex: 1;
   min-width: 0;
   margin: 0;
+  overflow: hidden;
   font-size: 14px;
-  line-height: 20px;
-  overflow-wrap: anywhere;
-  white-space: pre-line;
-}
-
-.notice-banner__badge {
-  display: inline-block;
-  margin-right: 8px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: #3182f6;
-  color: #fff;
-  font-size: 12px;
   font-weight: 600;
   line-height: 20px;
-  vertical-align: top;
-}
-
-.notice-banner__title {
-  margin-right: 6px;
-  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .notice-banner__close {
