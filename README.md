@@ -38,7 +38,10 @@ backend/
   index.js          서버 시작 및 환경변수 설정
   app.js            요청 처리 진입점
   http/static.js    프런트엔드 정적 파일 제공
+  views/            공통 헤더 HTML과 서버 렌더링
 ```
 
 API, DB, 인증 기능은 아직 구현하지 않았습니다.
+HTML의 `<!-- site-header -->` 위치에는 Node.js 서버가 공통 헤더를 삽입해 응답합니다.
+헤더는 JavaScript 실행 전에도 표시되며, 브라우저 JavaScript는 모바일 메뉴 동작을 담당합니다.
 기능을 추가할 때 백엔드는 도메인별 디렉터리로, 프런트엔드는 기능별 모듈로 분리합니다.

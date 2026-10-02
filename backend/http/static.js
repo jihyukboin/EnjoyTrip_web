@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderPage } from '../views/render-page.js';
 
 const root = fileURLToPath(new URL('../../frontend/', import.meta.url));
 const contentTypes = {
@@ -13,7 +14,8 @@ const contentTypes = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2'
 };
 
 export async function serveStatic(request, response) {
@@ -49,6 +51,10 @@ export async function serveStatic(request, response) {
       return;
     }
     throw error;
+  }
+
+  if (extname(filePath) === '.html') {
+    content = await renderPage(content);
   }
 
   response.writeHead(200, {

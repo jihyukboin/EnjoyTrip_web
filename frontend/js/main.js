@@ -1,1 +1,3 @@
-// 화면 기능은 구현 시 이 파일에서 연결합니다.
+import { initializeSiteHeader } from './components/site-header.js';
+
+initializeSiteHeader();
