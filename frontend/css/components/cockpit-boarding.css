@@ -4,7 +4,7 @@
   padding: 0; border: 1px solid #d4d8d9; border-radius: 8px;
   background: #f7f8f6; color: #202c34; box-shadow: 0 24px 80px #0005;
 }
-.boarding::backdrop { background: #0b1019b3; }
+.boarding::backdrop { background: rgb(11 16 25 / 35%); }
 .boarding__form { display: grid; gap: 24px; padding: 36px; }
 .boarding__eyebrow { margin: 0 0 12px; color: #577081; font-size: 12px; font-weight: 600; }
 .boarding__title { margin: 0; font-size: clamp(23px, 3vw, 29px); font-weight: 650; letter-spacing: -.04em; line-height: 1.3; }

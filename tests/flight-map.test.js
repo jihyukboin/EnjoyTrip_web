@@ -8,6 +8,8 @@ function setup(t, { sdk = true, deferred = false } = {}) {
   const status = { textContent: '' };
   const retry = { hidden: true, addEventListener() {} };
   const points = [];
+  const routes = [];
+  const markers = [];
   let load;
   let resize;
   let layoutCount = 0;
@@ -19,19 +21,32 @@ function setup(t, { sdk = true, deferred = false } = {}) {
     relayout() { layoutCount++; }
   }
   const globals = {
-    document: { querySelector: selector => ({ '[data-flight-map]': container, '.flight-map__status': status, '[data-map-retry]': retry })[selector] },
+    document: { createElement: () => ({}), querySelector: selector => ({ '[data-flight-map]': container, '.flight-map__status': status, '[data-map-retry]': retry })[selector] },
     window: { addEventListener() {} },
     ResizeObserver: class { constructor(callback) { resize = callback; } observe() {} disconnect() {} },
     kakao: sdk ? { maps: { load(callback) { load = callback; if (!deferred) callback(); }, Map, LatLng,
-      MapTypeId: { SKYVIEW: 2 }, ControlPosition: { RIGHT: 2 }, ZoomControl: class {} } } : undefined
+      MapTypeId: { SKYVIEW: 2 }, ControlPosition: { RIGHT: 2 }, ZoomControl: class {},
+      Polyline: class { constructor(options) { routes.push(options.path); } },
+      Marker: class { constructor(options) { markers.push(options); } }, CustomOverlay: class {} } } : undefined
   };
   for (const [key, value] of Object.entries(globals)) {
     const descriptor = Object.getOwnPropertyDescriptor(globalThis, key);
     Object.defineProperty(globalThis, key, { value, configurable: true, writable: true });
     t.after(() => { if (descriptor) Object.defineProperty(globalThis, key, descriptor); else delete globalThis[key]; });
   }
-  return { container, status, retry, points, load: () => load(), resize: () => resize(), layouts: () => layoutCount };
+  return { container, status, retry, points, routes, markers, load: () => load(), resize: () => resize(), layouts: () => layoutCount };
 }
+
+test('게시글의 출발 좌표에서 지도를 열고 출발·도착 경로와 마커를 표시한다', t => {
+  const env = setup(t);
+  const start = { lat: 35.1, lng: 129.1 };
+  const end = { lat: 37.5, lng: 127 };
+  const map = initializeFlightMap({ start, end });
+  assert.equal(map.isReady(), true);
+  assert.deepEqual({ ...env.points[0] }, start);
+  assert.deepEqual(env.routes[0].map(point => ({ ...point })), [start, end]);
+  assert.deepEqual(env.markers.map(marker => marker.title), ['출발', '도착']);
+});
 
 test('비행 좌표를 Kakao 지도 중심에 반영하고 크기 변경 후에도 위치를 유지한다', t => {
   const env = setup(t);
