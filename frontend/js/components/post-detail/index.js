@@ -11,7 +11,7 @@ async function loadItem() {
   const postId = params.get('id');
   if (ID.test(noticeId ?? '')) {
     const notice = await getNotice(noticeId);
-    return { ...notice, author: { name: '공지사항' } };
+    return { ...notice, type: 'notice', author: { name: '공지사항' } };
   }
   if (ID.test(postId ?? '')) return getPost(postId);
   throw new Error('잘못된 게시글 주소입니다.');
@@ -31,6 +31,11 @@ export async function initializePostDetail() {
     time.textContent = dateFormat.format(new Date(item.createdAt));
     root.querySelector('.post-detail__meta').replaceChildren(`${item.author.name} · `, time);
     root.querySelector('.post-detail__content').textContent = item.content;
+    if (item.type !== 'notice') {
+      const flightLink = root.querySelector('[data-flight-link]');
+      flightLink.href = `/flight?${new URLSearchParams({ selected: item.id })}`;
+      flightLink.hidden = false;
+    }
     body.hidden = false;
     status.textContent = '';
   } catch (error) {

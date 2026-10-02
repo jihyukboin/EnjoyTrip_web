@@ -1,4 +1,4 @@
-import { listPosts } from '../../api/post-api.js';
+import { getPost, listPosts } from '../../api/post-api.js';
 import { renderPagination } from '../post-list/pagination.js';
 import { renderTicket } from './ticket.js';
 
@@ -19,9 +19,37 @@ export async function initializeFlight() {
   try {
     const { posts, pagination } = await listPosts(readPage());
     const userPosts = posts.filter(post => post.type === 'post');
-    list.replaceChildren(...userPosts.map(renderTicket));
-    status.textContent = userPosts.length ? '' : '등록된 게시글이 없습니다.';
+    const selectedParam = new URLSearchParams(location.search).get('selected');
+    const selectedId = /^[1-9]\d{0,15}$/.test(selectedParam ?? '') ? selectedParam : null;
+    let selectedPost = userPosts.find(post => String(post.id) === selectedId);
+    // 현재 목록 페이지에 없는 글도 상세 API로 불러와 가장 위에 표시한다.
+    if (selectedId && !selectedPost) {
+      try {
+        selectedPost = await getPost(selectedId);
+      } catch (error) {
+        if (error.status !== 404) throw error;
+      }
+    }
+    const orderedPosts = selectedPost
+      ? [selectedPost, ...userPosts.filter(post => String(post.id) !== selectedId)]
+      : userPosts;
+    list.replaceChildren(...orderedPosts.map(post => {
+      const ticket = renderTicket(post);
+      if (String(post.id) === selectedId) {
+        ticket.classList.add('flight-ticket--selected');
+        ticket.querySelector('article').setAttribute('aria-label', `선택한 항공권 · ${post.title}`);
+      }
+      return ticket;
+    }));
+    status.textContent = orderedPosts.length ? '' : '등록된 게시글이 없습니다.';
     renderPagination(nav, pagination);
+    if (selectedPost) {
+      for (const link of nav.querySelectorAll('a')) {
+        const params = new URLSearchParams(link.search);
+        params.set('selected', selectedId);
+        link.search = params.toString();
+      }
+    }
   } catch (error) {
     list.replaceChildren();
     nav.hidden = true;

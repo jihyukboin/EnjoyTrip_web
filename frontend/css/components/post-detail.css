@@ -52,5 +52,11 @@
 
 .post-detail__actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   justify-content: flex-end;
+}
+
+.post-detail__flight-link[hidden] {
+  display: none;
 }

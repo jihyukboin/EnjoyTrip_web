@@ -50,6 +50,35 @@
     radial-gradient(circle var(--notch) at calc(100% - var(--stub)) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
 }
 
+/* 얇은 윤곽과 겹친 광원으로 선택한 항공권만 은은하게 강조한다. */
+.flight-ticket--selected {
+  filter: drop-shadow(0 0 3px rgba(125, 200, 250, 0.17))
+    drop-shadow(0 0 14px rgba(125, 200, 250, 0.13))
+    drop-shadow(0 8px 24px rgba(38, 116, 174, 0.09));
+}
+
+.flight-ticket--selected .flight-ticket__card {
+  position: relative;
+}
+
+.flight-ticket--selected .flight-ticket__card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* 카드 마스크와 같은 위치에 반원 윤곽을 그려 홈에서도 테두리를 잇는다. */
+  background:
+    radial-gradient(circle var(--notch) at calc(100% - var(--stub)) 0,
+      transparent 98%, #a6d9fb 100%, #a6d9fb calc(100% + 1px), transparent calc(100% + 1.5px)) top / 100% 51% no-repeat,
+    radial-gradient(circle var(--notch) at calc(100% - var(--stub)) 100%,
+      transparent 98%, #a6d9fb 100%, #a6d9fb calc(100% + 1px), transparent calc(100% + 1.5px)) bottom / 100% 51% no-repeat;
+  background-origin: border-box;
+  /* 윤곽을 안쪽에 그려 마스크 경계의 소수점 픽셀에도 잘리지 않도록 한다. */
+  box-shadow: inset 0 0 0 1.5px #a6d9fb,
+    inset 0 0 16px rgba(148, 214, 255, 0.12);
+  pointer-events: none;
+}
+
 .flight-ticket__body {
   display: grid;
   gap: 14px;
