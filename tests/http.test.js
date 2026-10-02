@@ -122,12 +122,24 @@ test('/flight/{게시글 ID}는 환경변수 키로 Kakao 지도 SDK를 불러�
     assert.ok(html.includes('data-flight-map'));
     assert.ok(html.includes('src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=test-key&amp;autoload=false"'));
     assert.ok(!html.includes('{{kakao-map-key}}'));
+    // 조종석: P1 핸들(WASD)·P2 페달(↑↓)·중앙 주변 정보·탑승 안내
+    for (const marker of ['data-cockpit', 'data-hud', 'data-yoke', 'data-pfd', 'data-engine', 'data-nearby', 'data-boarding']) {
+      assert.ok(html.includes(marker), marker);
+    }
+    for (const code of ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown']) {
+      assert.ok(html.includes(`data-key="${code}"`), code);
+    }
+    assert.match(html, /<dialog class="boarding" data-boarding[\s\S]*?name="crew" value="duo"/);
     for (const path of ['/flight/0', '/flight/abc', '/flight/1/x']) {
       const missing = await fetch(mapOrigin + path);
       assert.equal(missing.status, 404, path);
       await missing.arrayBuffer();
     }
-    for (const path of ['/css/components/flight-map.css', '/js/components/flight-map/index.js']) {
+    for (const path of [
+      '/css/components/flight-map.css', '/css/components/cockpit.css', '/css/components/cockpit-panel.css',
+      '/css/components/cockpit-nearby.css', '/css/components/cockpit-boarding.css',
+      '/js/components/flight-map/index.js', '/js/components/cockpit/index.js'
+    ]) {
       const asset = await fetch(mapOrigin + path);
       assert.equal(asset.status, 200, path);
       await asset.arrayBuffer();

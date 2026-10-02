@@ -1,0 +1,305 @@
+/* /flight/{게시글 ID} 조종석: 화면 배치, 유리창, 상단 프레임, HUD */
+.cockpit-root,
+.cockpit-root body {
+  height: 100%;
+  overflow: hidden;
+  background: #05080c;
+  scrollbar-gutter: auto;
+}
+
+.cockpit {
+  /* 조종석 디스플레이 관례: 흰색 눈금, 초록 현재 값, 시안 목표 값, 앰버 주의 */
+  --ck-text: #e6ecf2;
+  --ck-muted: #8593a2;
+  --ck-dim: #4f5d6b;
+  --ck-line: rgb(255 255 255 / 0.07);
+  --ck-screen: #03060a;
+  --ck-green: #4af58f;
+  --ck-cyan: #4fd5ff;
+  --ck-amber: #ffb84d;
+  --ck-red: #ff5a52;
+  --ck-p1: #5d9fff;
+  --ck-p2: #ff8f5a;
+  --overhead-h: 52px;
+  --pillar-top: clamp(56px, 7vw, 120px);
+  --pillar-foot: clamp(16px, 1.8vw, 30px);
+  --sill: 14px;
+  --panel-h: clamp(236px, 35vh, 330px);
+
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--panel-h);
+  max-width: none;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  color: var(--ck-text);
+  background: #05080c;
+  font-variant-numeric: tabular-nums;
+}
+
+.cockpit .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cockpit :focus-visible {
+  outline: 2px solid var(--ck-cyan);
+  outline-offset: 2px;
+}
+
+/* 1인·2인 탑승에 따라 좌석 안내 문구를 바꾼다 */
+.cockpit[data-crew="solo"] [data-crew-only="duo"],
+.cockpit[data-crew="duo"] [data-crew-only="solo"] {
+  display: none;
+}
+
+/* 유리창 */
+.cockpit__windshield {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(120% 90% at 50% 10%, #16395d 0%, #0b1d31 55%, #060d16 100%);
+}
+
+.cockpit__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(112deg, transparent 0 34%, rgb(255 255 255 / 0.05) 40%, transparent 47%),
+    linear-gradient(112deg, transparent 0 52%, rgb(255 255 255 / 0.025) 55%, transparent 59%),
+    radial-gradient(140% 100% at 50% 42%, transparent 55%, rgb(3 6 10 / 0.6) 100%),
+    linear-gradient(180deg, rgb(4 8 14 / 0.4), transparent 20%, transparent 78%, rgb(4 8 14 / 0.5));
+}
+
+.cockpit__frame {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 0 18px rgb(0 0 0 / 0.7));
+}
+
+.cockpit__frame::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--sill);
+  background: linear-gradient(180deg, #121922, #080b10);
+}
+
+.cockpit__pillar {
+  position: absolute;
+  inset: 0;
+}
+
+.cockpit__pillar--left {
+  background: linear-gradient(90deg, #04070a 0%, #0c1218 55%, #19222c 100%);
+  clip-path: polygon(0 0, var(--pillar-top) 0, var(--pillar-foot) 100%, 0 100%);
+}
+
+.cockpit__pillar--right {
+  background: linear-gradient(270deg, #04070a 0%, #0c1218 55%, #19222c 100%);
+  clip-path: polygon(calc(100% - var(--pillar-top)) 0, 100% 0, 100% 100%, calc(100% - var(--pillar-foot)) 100%);
+}
+
+/* 상단 프레임 */
+.cockpit__overhead {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: var(--overhead-h);
+  padding: 0 clamp(16px, 2vw, 28px);
+  background: linear-gradient(180deg, #06090d, #0b1016);
+  border-bottom: 1px solid var(--ck-line);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
+}
+
+.cockpit__brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--ck-text);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.cockpit__brand small {
+  color: var(--ck-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+.cockpit__badge {
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--ck-amber) 55%, transparent);
+  border-radius: 999px;
+  color: var(--ck-amber);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.cockpit__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.cockpit__action {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--ck-line);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.03);
+  color: var(--ck-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.cockpit__action:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.cockpit__action--exit:hover {
+  border-color: color-mix(in srgb, var(--ck-red) 60%, transparent);
+  color: #ffd9d6;
+}
+
+/* HUD: 지도 위에 겹치므로 외곽 그림자로 위성 사진 위에서도 읽히게 한다 */
+.hud {
+  position: absolute;
+  inset: 0 var(--pillar-foot) var(--sill);
+  z-index: 2;
+  color: var(--ck-green);
+  pointer-events: none;
+}
+
+.hud svg {
+  overflow: visible;
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.95)) drop-shadow(0 1px 3px rgb(0 0 0 / 0.6));
+}
+
+.hud svg text {
+  fill: currentColor;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hud__top {
+  position: absolute;
+  top: calc(var(--overhead-h) + 14px);
+  left: 50%;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  translate: -50% 0;
+}
+
+.hud__tape {
+  width: clamp(260px, 30vw, 440px);
+  height: 48px;
+}
+
+.hud__readout {
+  display: grid;
+  min-width: 84px;
+  padding: 5px 10px 6px;
+  border: 1px solid color-mix(in srgb, var(--ck-green) 40%, transparent);
+  border-radius: 8px;
+  background: rgb(2 10 6 / 0.4);
+  backdrop-filter: blur(3px);
+  text-shadow: 0 0 2px #000;
+}
+
+.hud__readout--right {
+  text-align: right;
+}
+
+.hud__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  opacity: 0.75;
+}
+
+.hud__value {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.hud__unit {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.hud__ownship {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(200px, 32vmin, 320px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+}
+
+.hud__tape {
+  mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+}
+
+.hud__tape line,
+.hud__tick {
+  stroke: currentColor;
+}
+
+.hud__box {
+  fill: rgb(2 10 6 / 0.75);
+  stroke: currentColor;
+}
+
+.hud__target {
+  fill: var(--ck-cyan);
+}
+
+.hud__ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-dasharray: 2 6;
+  stroke-opacity: 0.45;
+}
+
+.hud__trend {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 10 6;
+}
+
+.hud__plane {
+  fill: #fff;
+  stroke: #05080c;
+  stroke-width: 0.8;
+}
