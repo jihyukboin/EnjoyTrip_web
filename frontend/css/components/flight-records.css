@@ -11,6 +11,11 @@
 .flight-records > ol > li > p { margin: 16px 0 24px; color: #4e5968; font-size: 16px; line-height: 1.6; letter-spacing: -.02em; }
 .flight-records__itinerary { list-style: none; margin: 0; border-left: 2px solid #d9dfe5; padding-left: 18px; }
 .flight-records__itinerary li { padding: 10px 0; color: #4e5968; line-height: 1.6; overflow-wrap: anywhere; }
+.flight-records__actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px; color: #6b7684; font-size: 14px; }
+.flight-records__actions button { padding: 10px 16px; border: 1px solid #d9dfe5; border-radius: 8px; background: #fff; color: #b44343; font: inherit; font-weight: 600; cursor: pointer; }
+.flight-records__actions button:hover { border-color: #e5baba; background: #fff4f4; }
+.flight-records__actions button:focus-visible { outline: 2px solid #3182f6; outline-offset: 3px; }
+.flight-records__actions button:disabled { opacity: .5; cursor: wait; }
 @media (max-width: 639px) {
   .flight-records > ol > li { padding: 24px; }
   .flight-records h2 { font-size: 20px; }
