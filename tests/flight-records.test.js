@@ -39,7 +39,7 @@ test('비행 기록은 좌표·경유지·플레이 수치와 허용 필드만 �
 test('항공권 기록은 로그인별로 저장·조회하고 같은 비행의 재저장을 중복하지 않는다', async t => {
   const db = openDatabase(':memory:');
   const config = { origin: '', secureCookies: false };
-  const server = createServer(createRequestHandler({ apiHandler: createApi({ db, config }) }));
+  const server = createServer(createRequestHandler({ apiHandler: createApi({ db, config, rateLimit: { limit: 100 } }) }));
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   config.origin = `http://127.0.0.1:${server.address().port}`;
   t.after(async () => { await new Promise(resolve => server.close(resolve)); db.close(); });
@@ -66,8 +66,27 @@ test('항공권 기록은 로그인별로 저장·조회하고 같은 비행의 
   assert.equal(db.prepare('SELECT count(*) AS n FROM flight_records').get().n, 1);
   const second = await member('pilottwo');
   assert.equal((await call(path, 'GET', undefined, second)).json.data.records.length, 0);
-  assert.equal((await call(path, 'POST', body(), second)).status, 201);
+  const secondSaved = await call(path, 'POST', body(), second);
+  assert.equal(secondSaved.status, 201);
   assert.equal((await call(path, 'GET', undefined, first)).json.data.records.length, 1);
+  const ownDelete = `${path}/${saved.json.data.record.id}`;
+  const otherDelete = `${path}/${secondSaved.json.data.record.id}`;
+  assert.equal((await call(ownDelete, 'DELETE', {})).status, 401);
+  assert.equal((await call(ownDelete, 'DELETE', {}, second)).status, 403);
+  // 게시글 작성자여도 다른 사용자가 플레이한 경로는 삭제할 수 없다.
+  assert.equal((await call(otherDelete, 'DELETE', {}, first)).status, 403);
+  assert.equal(db.prepare('SELECT count(*) AS n FROM flight_records').get().n, 2);
+  assert.equal((await call(ownDelete, 'DELETE', {}, first)).status, 204);
+  assert.equal((await call(ownDelete, 'DELETE', {}, first)).status, 404);
+  const admin = await member('pilotadmin');
+  db.prepare('UPDATE members SET isAdmin = 1 WHERE username = ?').run('pilotadmin');
+  const adminRecords = (await call(path, 'GET', undefined, admin)).json.data.records;
+  assert.equal(adminRecords.length, 1);
+  assert.equal(adminRecords[0].player.id, 'pilottwo');
+  assert.equal((await call(otherDelete, 'DELETE', { memberId: 1 }, admin)).status, 400);
+  assert.equal((await call(`/api/posts/999/flight-records/${secondSaved.json.data.record.id}`, 'DELETE', {}, admin)).status, 404);
+  assert.equal((await call(otherDelete, 'DELETE', {}, admin)).status, 204);
+  assert.equal((await call(path, 'POST', body(), second)).status, 201);
   assert.equal((await call(`/api/posts/${post.id}`, 'DELETE', {}, first)).status, 204);
   assert.equal(db.prepare('SELECT count(*) AS n FROM flight_records').get().n, 0);
 });

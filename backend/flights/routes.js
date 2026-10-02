@@ -1,5 +1,6 @@
 import { ApiError, sendJson } from '../http/api-response.js';
 import { validateFlight } from './validation.js';
+import { validateEmpty } from '../http/json-body.js';
 
 export function createFlightRoutes({ db, auth, posts, now }) {
   const read = row => ({ id: row.id, postId: row.post_id, createdAt: new Date(row.created_at).toISOString(),
@@ -10,7 +11,10 @@ export function createFlightRoutes({ db, auth, posts, now }) {
       ['GET', { action(body, token, response, request, { id }) {
         const member = auth.authenticate(token);
         posts.get(id);
-        const records = db.prepare('SELECT * FROM flight_records WHERE post_id = ? AND member_id = ? ORDER BY id DESC LIMIT 20').all(id, member.id).map(read);
+        const records = db.prepare(`SELECT f.*, m.username, m.name AS player_name FROM flight_records f
+          JOIN members m ON m.id = f.member_id
+          WHERE f.post_id = ? AND (? = 1 OR f.member_id = ?) ORDER BY f.id DESC LIMIT 20`)
+          .all(id, member.isAdmin, member.id).map(row => ({ ...read(row), player: { id: row.username, name: row.player_name } }));
         sendJson(response, 200, { data: { records } });
       } }],
       ['POST', mutation(validateFlight, (body, token, response, request, { id }) => {
@@ -27,6 +31,18 @@ export function createFlightRoutes({ db, auth, posts, now }) {
         const row = db.prepare('SELECT * FROM flight_records WHERE member_id = ? AND run_id = ?').get(member.id, body.runId);
         if (!result.changes) return sendJson(response, 200, { data: { record: read(row) } });
         sendJson(response, 201, { data: { record: read(row) } });
+      })]
+    ])],
+    ['/api/posts/:id/flight-records/:recordId', new Map([
+      ['DELETE', mutation(validateEmpty, (body, token, response, request, { id, recordId }) => {
+        const member = auth.authenticate(token);
+        const record = db.prepare('SELECT member_id FROM flight_records WHERE id = ? AND post_id = ?').get(recordId, id);
+        if (!record) throw new ApiError(404, 'FLIGHT_RECORD_NOT_FOUND', '플레이 기록을 찾을 수 없습니다.');
+        if (record.member_id !== member.id && member.isAdmin !== 1) {
+          throw new ApiError(403, 'FORBIDDEN', '이 경로를 플레이한 사용자 또는 관리자만 삭제할 수 있습니다.');
+        }
+        db.prepare('DELETE FROM flight_records WHERE id = ? AND post_id = ?').run(recordId, id);
+        sendJson(response, 204);
       })]
     ])]
   ]);

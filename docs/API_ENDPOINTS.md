@@ -49,9 +49,12 @@
 | 메서드 | 경로 | 요청 | 성공 응답 |
 | --- | --- | --- | --- |
 | POST | `/api/posts/:id/flight-records` | `runId`, `start`, `end`, `waypoints`, `flightSeconds`, `distanceMeters` | 201, `data.record`; 같은 비행 재저장은 200 |
-| GET | `/api/posts/:id/flight-records` | 없음 | 200, `data.records` (본인의 최신 20개) |
+| GET | `/api/posts/:id/flight-records` | 없음 | 200, `data.records` (일반 회원은 본인의 최신 20개, 관리자는 해당 항공권 전체 기록 중 최신 20개) |
+| DELETE | `/api/posts/:id/flight-records/:recordId` | `{}` | 204 |
 
-두 API 모두 로그인이 필요합니다. 공개 게시글의 항공권으로 비행한 회원이 자기 기록을 저장·조회합니다. `runId`는 비행마다 생성한 UUID로, 재시도에는 같은 값을 보내 중복 저장을 방지합니다. 같은 UUID를 다른 항공권에 재사용하면 409 `FLIGHT_RUN_CONFLICT`를 반환합니다.
+모든 API에 로그인이 필요합니다. 공개 게시글의 항공권으로 비행한 회원이 자기 기록을 저장·조회합니다. 관리자는 해당 항공권의 다른 회원 기록도 조회·삭제할 수 있습니다. 목록에는 플레이한 회원의 `player`(`id`, `name`)를 함께 반환합니다. 삭제는 해당 기록을 플레이한 회원 또는 관리자에게만 허용하며, 게시글 작성자라는 이유만으로 다른 회원 기록을 삭제할 수 없습니다. 권한이 없으면 403 `FORBIDDEN`, 해당 항공권에 기록이 없으면 404 `FLIGHT_RECORD_NOT_FOUND`를 반환합니다. 화면의 ‘경로 삭제’에서 확인 후 삭제하며 실패하면 카드가 유지됩니다.
+
+`runId`는 비행마다 생성한 UUID로, 재시도에는 같은 값을 보내 중복 저장을 방지합니다. 같은 UUID를 다른 항공권에 재사용하면 409 `FLIGHT_RUN_CONFLICT`를 반환합니다.
 
 `start`, `end`, `waypoints`의 각 지점은 `{ name, lat, lng }`입니다. 이름은 1~200자, 위도는 -90~90, 경도는 -180~180이며 경유지는 중복 좌표 없이 최대 5개입니다. 출발·도착 이름은 저장 시 게시글의 주소로 확정합니다. 비행 시간은 초 단위(0~604800), 이동 거리는 미터 단위(0~50000000)이며 반올림해 저장합니다. 기록은 요청 정보와 `id`, `postId`, `createdAt`을 반환합니다.
 
