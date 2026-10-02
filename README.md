@@ -1,7 +1,8 @@
 # EnjoyTrip
 
-HTML5, CSS3, JavaScript, Node.js 기반 서버 렌더링 프로젝트의 초기 골격입니다.
-외부 의존성과 업무 기능은 포함하지 않습니다.
+HTML5, CSS3, JavaScript, Node.js 기반 서버 렌더링 프로젝트입니다.
+외부 패키지 없이 Node.js 내장 SQLite와 암호화 모듈로 F107 회원관리·F108 로그인관리 API를 제공합니다.
+프런트엔드의 로그인·게시판 화면은 아직 빈 본문이며, 회원 API와 화면 연동은 추후 진행합니다.
 
 ## 실행
 
@@ -26,6 +27,20 @@ HTML, CSS, 프런트엔드 JavaScript 수정은 브라우저를 새로고침해�
 변경이 필요하면 `.env.example`을 `.env`로 복사하고 값을 수정합니다.
 `.env`는 Node.js 내장 기능으로 로드하며 Git에서 제외됩니다.
 
+| 변수 | 기본값 | 설명 |
+| --- | --- | --- |
+| `APP_ORIGIN` | `http://127.0.0.1:3000` | 프런트엔드와 API의 정확한 origin; HOST·PORT 변경 시 함께 수정 |
+| `DB_PATH` | `backend/data/enjoytrip.sqlite` | 저장소 기준 SQLite 경로; 첫 실행 시 폴더·스키마 자동 생성 |
+| `COOKIE_SECURE` | 로컬 HTTP에서는 `false` | HTTPS에서는 `true`; 운영에서는 HTTPS·Secure 필수 |
+| `RESET_DELIVERY_MODE` | `disabled` | `console`이면 로컬 개발 서버 터미널에 재설정 토큰 출력 |
+
+`.env` 파일을 만들려면 `Copy-Item .env.example .env`를 실행합니다(기존 `.env`가 있으면 덮어쓰지 말고 필요한 항목만 수정합니다).
+DB는 재시작 후에도 유지되며 DB 파일·사이드카와 `.env`는 Git에서 제외됩니다. 회원 데이터가 담긴 DB는 팀 공유 대상이 아닙니다.
+
+실제 이메일 발송은 아직 연결되지 않았습니다. 기본 모드에서 재설정 요청은 모든 이메일에 `503 RESET_DELIVERY_UNAVAILABLE`을 반환합니다.
+로컬 데모에서는 `.env`의 `RESET_DELIVERY_MODE=console`로 설정하고 서버를 재시작한 뒤, 요청 시 터미널에 출력된 토큰을 재설정 완료 API에 입력합니다.
+콘솔 모드는 운영 환경 및 외부에 바인딩된 서버에서 사용할 수 없습니다. 실제 사용자 대상 비밀번호 찾기는 이메일 전달 연동이 필요합니다.
+
 ## 구조
 
 ```text
@@ -47,17 +62,31 @@ frontend/
 backend/
   index.js          서버 시작 및 환경변수 설정
   app.js            요청 처리 진입점
+  api.js            회원·인증 API 조립
+  config.js         서버·DB·쿠키·복구 환경설정 검증
+  db/               SQLite 연결·버전 1 스키마
+  members/          회원 저장·업무 로직·입력 검증
+  auth/             비밀번호 해시·세션·재설정 토큰
+  data/             로컬 DB (Git 제외, 첫 실행 시 생성)
   http/pages.js     페이지 경로와 서버 렌더링 응답
   http/static.js    정적 파일 제공
   http/response.js  ETag와 GET/HEAD 응답
   views/            공통 head·헤더 HTML과 서버 렌더링
 tests/
+  api.test.js          회원·인증 API 통합 검증
+  database.test.js     DB 재시작·제약조건·설정 검증
+  runtime.test.js      실제 서버 재시작·세션 영속성·콘솔 복구 검증
   http.test.js         서버 응답 통합 검증
   member.test.js       회원 API 목업 검증
   travel-hero.test.js  히어로 지도·점·항로 계산 검증
 ```
 
-API, DB, 인증 기능은 아직 구현하지 않았습니다.
+F107 회원관리·F108 로그인관리의 API 9개와 SQLite 저장을 구현했습니다. API 계약과 프런트엔드 연동 방법은 아래 문서를 참조합니다.
+
+- [SQLite 저장 구조](docs/SQLITE.md)
+- [백엔드 API 공통 규칙](docs/BACKEND_API.md)
+- [API 엔드포인트별 요청·응답](docs/API_ENDPOINTS.md)
+
 HTML의 `<!-- site-header -->` 위치에는 Node.js 서버가 공통 헤더를 삽입해 응답합니다.
 `<!-- document-head -->`에는 공통 스타일, 폰트 preload, JavaScript 모듈을 삽입합니다.
 헤더는 JavaScript 실행 전에도 표시되며, 브라우저 JavaScript는 모바일 메뉴 동작을 담당합니다.
@@ -99,4 +128,6 @@ HTML은 매 요청 시 서버에서 완성합니다. HTML과 정적 파일은 ET
 npm test
 ```
 
+서버 렌더링·캐시·홈 히어로 외에 회원가입·로그인·수정·탈퇴, 세션 만료·폐기, 재설정 토큰 만료·동시 소비, JSON·Origin 검증, 요청 제한, DB 영속성을 검증합니다.
+테스트는 임시 DB를 사용하며 실제 로컬 회원 DB를 변경하지 않습니다.
 서버 렌더링 결과, 폰트 제공, ETag/304, HEAD, 오류 응답, 홈 히어로의 지도·항로 계산, 회원 API 목업을 검증합니다.
