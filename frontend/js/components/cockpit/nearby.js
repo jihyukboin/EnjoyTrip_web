@@ -77,7 +77,7 @@ export function createNearby(section, onVisiblePlaces = () => {}, onSelect = () 
     radarHost.replaceChildren(radar.element);
     radar.update(heading);
     meta.textContent = pending ? '새로운 주변 장소를 찾는 중…' : failed ? '연결 지연 · 자동 재시도 중' : '내 위치 반경 2km · 이동에 따라 갱신';
-    hint.textContent = `${visible.length}곳 표시${matching.length > 5 ? ` / ${matching.length}곳 중 가까운 순` : ''} · 장소를 누르면 멈춰서 확인`;
+    hint.textContent = `${visible.length}곳 표시${matching.length > 5 ? ` / ${matching.length}곳 중 가까운 순` : ''} · 장소를 눌러 경유지 추가`;
   }
 
   async function refresh() {

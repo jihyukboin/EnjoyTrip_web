@@ -50,7 +50,7 @@ test('버전 7 게시글·주소를 보존하며 빈 본문을 허용하고 탈�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 9);
     assert.deepEqual({ ...db.prepare('SELECT * FROM posts').get() }, {
       id: 9, author_id: 1, title: '여행 제목', content: '기존 본문', created_at: 123, origin: '서울', destination: '부산'
     });
@@ -84,7 +84,7 @@ test('파일 DB 재시작·스키마 버전·외래 키·롤백을 검증한다'
     db.close();
     db = openDatabase(path);
     assert.equal(db.prepare('SELECT name FROM members WHERE id = ?').get(1).name, '테스트');
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 9);
     assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
   } finally { if (db.isOpen) db.close(); }
 });
@@ -104,7 +104,7 @@ test('환경설정은 DB 공개 경로·운영 HTTP를 거부한다', () => {
   assert.equal(readConfig({ APP_ORIGIN: 'https://example.com' }).secureCookies, true);
 });
 
-test('버전 1 DB를 기존 회원·세션을 유지하며 아이디·게시글이 있고 이메일이 없고 관리자 여부가 있는 버전 8로 변환한다', t => {
+test('버전 1 DB를 기존 회원·세션을 유지하며 아이디·게시글이 있고 이메일이 없고 관리자 여부와 비행 기록이 있는 버전 9로 변환한다', t => {
   const directory = mkdtempSync(join(tmpdir(), 'enjoytrip-db-'));
   const path = join(directory, 'legacy.sqlite');
   t.after(() => rmSync(directory, { recursive: true, force: true }));
@@ -116,7 +116,7 @@ test('버전 1 DB를 기존 회원·세션을 유지하며 아이디·게시글�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 9);
     assert.equal(db.prepare('SELECT username FROM members').get().username, 'member1');
     assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 1);
     assert.throws(() => db.prepare('INSERT INTO members (id, username, name, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
@@ -136,7 +136,7 @@ test('버전 2 회원 DB에 게시글 테이블을 추가하고 탈퇴 시 작�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 9);
     assert.equal(db.prepare('SELECT username FROM members').get().username, 'writer');
     db.prepare('INSERT INTO posts(id, author_id, title, content, created_at) VALUES (?, ?, ?, ?, ?)').run(1, 1, '제목', '본문', 1);
     db.prepare('DELETE FROM members WHERE id = ?').run(1);
@@ -160,7 +160,7 @@ test('버전 3 DB에서 이메일 열·재설정 토큰 테이블을 제거하�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 9);
     assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
     assert.deepEqual(db.prepare('PRAGMA table_info(members)').all().map(column => column.name),
       ['id', 'username', 'name', 'password_hash', 'created_at', 'updated_at', 'isAdmin']);
@@ -192,7 +192,7 @@ test('버전 4 회원의 관리자 기본값·0/1 제약·재시작 후 권한 �
   legacy.close();
   let db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 9);
     assert.equal(db.prepare('SELECT isAdmin FROM members WHERE id = 1').get().isAdmin, 0);
     assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 1);
     assert.equal(db.prepare('SELECT count(*) AS n FROM posts').get().n, 1);
@@ -219,7 +219,7 @@ test('버전 5 DB에 공지사항 테이블을 추가하고 기존 회원·게�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 9);
     assert.equal(db.prepare('SELECT isAdmin FROM members WHERE id = 1').get().isAdmin, 1);
     assert.equal(db.prepare('SELECT count(*) AS n FROM posts').get().n, 1);
     db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)').run('공지', '내용', 1, 1);
@@ -244,7 +244,7 @@ test('버전 6 DB의 게시글에 시작점·도착점 열을 빈 값으로 추�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 9);
     assert.deepEqual({ ...db.prepare('SELECT title, origin, destination FROM posts').get() },
       { title: '제목', origin: '', destination: '' });
     assert.throws(() => db.prepare('UPDATE posts SET origin = ? WHERE id = 1').run('가'.repeat(201)));

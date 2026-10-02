@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { advancePosition, bearingDegrees, distanceMeters, routeDistanceMeters } from '../frontend/js/components/cockpit/navigation.js';
-import { createJourneyState, OFF_ROUTE_METERS, ARRIVAL_METERS } from '../frontend/js/components/cockpit/journey.js';
+import { createJourneyState, OFF_ROUTE_METERS } from '../frontend/js/components/cockpit/journey.js';
 
 const start = { lat: 37.5, lng: 127 };
 const end = { lat: 37.5, lng: 128 };
@@ -19,10 +19,9 @@ test('직선 경로의 구간 안·밖 거리와 같은 출발·도착 지점을
   assert.equal(routeDistanceMeters(end, start, start), distanceMeters(end, start));
 });
 
-test('활성 상태에서만 3초 카운트하고 시작 전 도착 확인을 띄우지 않는다', () => {
+test('활성 상태에서만 3초 카운트한다', () => {
   const state = createJourneyState({ start, end });
   assert.equal(state.countdown(), 3);
-  assert.equal(state.inspect(end).arrived, false);
   state.tick(10, false);
   assert.equal(state.countdown(), 3);
   state.tick(1, true);
@@ -35,14 +34,13 @@ test('활성 상태에서만 3초 카운트하고 시작 전 도착 확인을 �
   assert.equal(state.countdown(), 0);
 });
 
-test('10km 이탈 경고는 복귀하면 해제되고 도착 확인은 한 번만 발생한다', () => {
+test('10km 이탈 경고는 복귀하면 해제되고 도착해도 비행 상태를 유지한다', () => {
   const state = createJourneyState({ start, end });
   state.tick(3, true);
   assert.equal(OFF_ROUTE_METERS, 10000);
   assert.equal(state.inspect(advancePosition(start, 0, 9.99 / 1.852, 3600)).offRoute, false);
   assert.equal(state.inspect(advancePosition(start, 0, 10.01 / 1.852, 3600)).offRoute, true);
   assert.equal(state.inspect(start).offRoute, false);
-  assert.equal(state.inspect(advancePosition(end, 0, (ARRIVAL_METERS + 1) / 1852, 3600)).arrived, false);
-  assert.equal(state.inspect(advancePosition(end, 0, (ARRIVAL_METERS - 1) / 1852, 3600)).arrived, true);
-  assert.equal(state.inspect(end).arrived, false);
+  assert.deepEqual(state.inspect(end), { distance: 0, offRoute: false });
+  assert.equal(state.started(), true);
 });

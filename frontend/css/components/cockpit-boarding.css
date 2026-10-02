@@ -34,7 +34,20 @@
 .boarding__button--primary { background: #244b68; color: #fff; }
 .boarding__button--primary:hover { background: #183b56; }
 .boarding :focus-visible { outline-color: #244b68; }
+.boarding--flight-actions .boarding__actions { justify-content: flex-end; flex-wrap: wrap; padding-top: 8px; }
+.boarding--flight-actions .boarding__button { min-height: 46px; padding: 0 18px; border-radius: 8px; gap: 8px; white-space: nowrap; }
+.boarding--flight-actions .boarding__button--ghost { background: #fff; border-color: #cbd4da; color: #344f62; }
+.boarding--flight-actions .boarding__button--ghost:hover { background: #edf2f5; border-color: #9aafbd; }
+.boarding--flight-actions .boarding__button--quiet { margin-right: auto; padding-inline: 10px; color: #62717b; background: transparent; }
+.boarding--flight-actions .boarding__button--quiet:hover { color: #244b68; background: #eaf0f3; }
+.boarding--flight-actions .boarding__button:focus-visible { outline: 2px solid #7898af; outline-offset: 3px; }
+.boarding--flight-actions .boarding__button:disabled { opacity: .5; cursor: not-allowed; }
+.boarding--flight-actions [data-end-login] { justify-self: start; }
+.boarding--flight-actions [data-end-status]:empty { display: none; }
 @media (max-width: 560px) {
+  .boarding--flight-actions .boarding__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .boarding--flight-actions .boarding__button { padding-inline: 10px; }
+  .boarding--flight-actions .boarding__button--quiet { grid-column: 1 / -1; order: 1; justify-self: start; }
   .boarding__form { padding: 24px; gap: 20px; }
   .boarding__seats { grid-template-columns: 1fr; gap: 24px; }
   .boarding__seat-body { grid-template-columns: 116px minmax(0, 1fr); align-items: center; gap: 12px; }

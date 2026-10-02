@@ -194,6 +194,8 @@
 
 /* 절취선 오른쪽 탑승권 조각. 버튼을 세로·가로 가운데에 둔다 */
 .flight-ticket__stub {
+  align-content: center;
+  gap: 12px;
   display: grid;
   place-items: center;
   padding: 24px 16px;
@@ -309,3 +311,5 @@
     transform: none;
   }
 }
+.flight-ticket__records { color: #637b92; font-size: 13px; text-decoration: none; }
+.flight-ticket__records:hover { color: #1672db; text-decoration: underline; }
