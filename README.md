@@ -30,13 +30,14 @@ HTML, CSS, 프런트엔드 JavaScript 수정은 브라우저를 새로고침해�
 
 ```text
 frontend/
-  index.html        초기 화면
+  index.html        초기 화면 (지구본·비행기 캔버스 히어로)
   pages/login.html  로그인 페이지 (공통 헤더와 빈 메인)
   pages/post.html   게시판 페이지 (공통 헤더와 빈 메인)
   css/main.css      기본 스타일
   css/components/   컴포넌트별 스타일
   js/main.js        브라우저 모듈 진입점
   js/components/    서버 HTML에 연결하는 화면 동작
+    travel-hero/    홈 히어로 WebGL2 캔버스 (지도·점 생성·항로·셰이더·렌더링)
   assets/           이미지 등 정적 자원
 backend/
   index.js          서버 시작 및 환경변수 설정
@@ -46,7 +47,8 @@ backend/
   http/response.js  ETag와 GET/HEAD 응답
   views/            공통 head·헤더 HTML과 서버 렌더링
 tests/
-  http.test.js      서버 응답 통합 검증
+  http.test.js         서버 응답 통합 검증
+  travel-hero.test.js  히어로 지도·점·항로 계산 검증
 ```
 
 API, DB, 인증 기능은 아직 구현하지 않았습니다.
@@ -79,4 +81,4 @@ HTML은 매 요청 시 서버에서 완성합니다. HTML과 정적 파일은 ET
 npm test
 ```
 
-서버 렌더링 결과, 폰트 제공, ETag/304, HEAD, 오류 응답을 검증합니다.
+서버 렌더링 결과, 폰트 제공, ETag/304, HEAD, 오류 응답, 홈 히어로의 지도·항로 계산을 검증합니다.

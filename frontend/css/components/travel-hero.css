@@ -1,0 +1,148 @@
+/* 홈 메인은 히어로가 폭과 여백을 직접 관리한다 */
+main:has(> .travel-hero) {
+  max-width: none;
+  padding: 0;
+}
+
+/* 공통 헤더(50px) 아래까지 캔버스를 깔아 지구본이 반투명 헤더 뒤로 비친다 */
+.travel-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 1000px;
+  min-height: 640px;
+  margin: -50px auto 0;
+  padding: 116px 24px 64px;
+  overflow: hidden;
+}
+
+.travel-hero__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.travel-hero__content {
+  position: relative;
+  width: fit-content;
+  max-width: 640px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* 지구본 점 위에서도 문구가 또렷하도록 은은한 빛을 깐다 */
+.travel-hero__content::before {
+  content: '';
+  position: absolute;
+  inset: -40px -64px;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 78%), rgb(255 255 255 / 0%));
+  pointer-events: none;
+}
+
+.travel-hero__title {
+  margin: 0;
+  color: #1d1d1f;
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.travel-hero__title span {
+  display: block;
+}
+
+.travel-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.travel-hero__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 150ms, box-shadow 150ms, transform 150ms;
+}
+
+.travel-hero__action:focus-visible {
+  outline: 2px solid #4daafc;
+  outline-offset: 2px;
+}
+
+.travel-hero__action:active {
+  transform: scale(0.97);
+}
+
+.travel-hero__action svg {
+  flex-shrink: 0;
+  transition: transform 200ms;
+}
+
+.travel-hero__action--primary {
+  background: #3182f6;
+  box-shadow: 0 8px 20px rgb(49 130 246 / 28%);
+  color: #fff;
+}
+
+.travel-hero__action--primary:hover {
+  background: #1b64da;
+}
+
+.travel-hero__action--primary:hover svg {
+  transform: translate(2px, -2px);
+}
+
+.travel-hero__action--secondary {
+  background: rgb(255 255 255 / 80%);
+  box-shadow: inset 0 0 0 1px rgb(0 27 55 / 10%);
+  color: #333d4b;
+  backdrop-filter: blur(8px);
+}
+
+.travel-hero__action--secondary:hover {
+  background: #f2f4f6;
+}
+
+@media (min-width: 480px) {
+  .travel-hero__title {
+    font-size: 44px;
+  }
+}
+
+@media (min-width: 768px) {
+  .travel-hero {
+    min-height: 600px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .travel-hero__action,
+  .travel-hero__action svg {
+    transition: none;
+  }
+
+  .travel-hero__action:active,
+  .travel-hero__action--primary:hover svg {
+    transform: none;
+  }
+}
