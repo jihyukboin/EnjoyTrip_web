@@ -81,7 +81,9 @@ test('빈 글·길이 초과·잘못된 필드와 작성자 위조·다른 출�
   const api = await fixture(t);
   await api.register();
   for (const body of [
-    { title: ' ', content: '내용', ...route }, { title: '제목', content: '\n ', ...route },
+    { title: ' ', content: '내용', ...route },
+    { title: '제목', ...route, origin: ' ' }, { title: '제목', ...route, destination: '' },
+    { title: '제목', content: null, ...route },
     { title: 'a'.repeat(101), content: '내용', ...route }, { title: '제목', content: 'a'.repeat(2001), ...route },
     { title: 123, content: '내용', ...route }, { title: '제목', content: '\ud800', ...route },
     { title: '제목', content: 'a\0b', ...route },
@@ -98,6 +100,28 @@ test('빈 글·길이 초과·잘못된 필드와 작성자 위조·다른 출�
   assert.equal(api.db.prepare('SELECT count(*) AS n FROM posts').get().n, 0);
   const result = await api.call({ title: 'a'.repeat(100), content: '여'.repeat(2000), ...route });
   assert.equal(result.status, 201);
+});
+
+test('본문 없이 글을 등록·조회하고 본문 삭제와 출발·도착 변경을 저장한다', async t => {
+  const api = await fixture(t);
+  await api.register();
+  for (const content of [undefined, '', '\n ']) {
+    const post = await createPost({ title: '여행 제목', content, ...route });
+    assert.equal(post.content, '');
+    assert.equal(post.origin, route.origin);
+    assert.equal(post.destination, route.destination);
+    assert.deepEqual(await getPost(post.id), post);
+    assert.equal((await listPosts()).posts.find(item => item.id === post.id).content, '');
+  }
+  const post = await createPost({ title: '수정할 글', content: '기존 본문', ...route });
+  const updated = await updatePost(post.id, {
+    title: post.title, origin: route.destination, destination: route.origin
+  });
+  assert.equal(updated.content, '');
+  assert.equal(updated.origin, route.destination);
+  assert.equal(updated.destination, route.origin);
+  assert.deepEqual(await getPost(post.id), updated);
+  assert.equal(api.db.prepare('SELECT content FROM posts WHERE id = ?').get(post.id).content, '');
 });
 
 test('게시글 목록은 최신 글부터 20개씩 나누고 잘못된 페이지 값을 거부한다', async t => {

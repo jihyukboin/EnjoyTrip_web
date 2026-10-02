@@ -90,7 +90,14 @@ export function openDatabase(path) {
       });
       version = 7;
     }
-    if (version !== 7) throw new Error('Unsupported database schema version.');
+    if (version === 7) {
+      transaction(db, () => {
+        db.exec(readSql('posts-content-optional.sql'));
+        db.exec('PRAGMA user_version = 8');
+      });
+      version = 8;
+    }
+    if (version !== 8) throw new Error('Unsupported database schema version.');
     return db;
   } catch (error) {
     db.close();

@@ -2,6 +2,6 @@ CREATE TABLE posts (
   id INTEGER PRIMARY KEY,
   author_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
   title TEXT NOT NULL CHECK (length(title) BETWEEN 1 AND 100),
-  content TEXT NOT NULL CHECK (length(content) BETWEEN 1 AND 2000),
+  content TEXT NOT NULL CHECK (length(content) BETWEEN 0 AND 2000),
   created_at INTEGER NOT NULL
 ) STRICT;

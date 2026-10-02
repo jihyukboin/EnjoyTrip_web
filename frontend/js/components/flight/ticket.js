@@ -42,14 +42,14 @@ export function renderTicket(post) {
 
   const body = element('div', 'flight-ticket__body');
   const header = element('div', 'flight-ticket__header');
-  header.append(element('span', 'flight-ticket__airline', 'EnjoyTrip Air'),
+  header.append(element('h2', 'flight-ticket__airline', post.title),
     element('span', 'flight-ticket__pass', 'BOARDING PASS'));
 
   const route = element('div', 'flight-ticket__route');
   const destination = element('div', 'flight-ticket__endpoint flight-ticket__endpoint--to');
-  destination.append(element('h2', 'flight-ticket__destination', post.title),
+  destination.append(element('span', 'flight-ticket__destination', post.destination || '미지정'),
     element('span', 'flight-ticket__label', '도착'));
-  route.append(endpoint('ICN', '출발'), planeIcon(), destination);
+  route.append(endpoint(post.origin || '미지정', '출발'), planeIcon(), destination);
 
   const time = document.createElement('time');
   time.dateTime = post.createdAt;
