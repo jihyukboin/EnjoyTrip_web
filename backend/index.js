@@ -4,6 +4,7 @@ import { readConfig } from './config.js';
 import { openDatabase } from './db/database.js';
 import { createApi } from './api.js';
 import { createSessionReader } from './auth/session-reader.js';
+import { createNoticeBannerReader } from './notices/banner-reader.js';
 
 const config = readConfig();
 const { host, port } = config;
@@ -11,7 +12,8 @@ const db = openDatabase(config.databasePath);
 
 const server = createServer(createRequestHandler({
   apiHandler: createApi({ db, config }),
-  isLoggedIn: createSessionReader({ db })
+  readSession: createSessionReader({ db }),
+  readNotice: createNoticeBannerReader({ db })
 }));
 server.once('close', () => { if (db.isOpen) db.close(); });
 

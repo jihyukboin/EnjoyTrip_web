@@ -43,9 +43,25 @@ export function createApiRouter({ config, members, auth, now = Date.now, rateLim
 
   for (const [path, methods] of extraRoutes) routes.set(path, methods);
 
+  // '/api/x/:id' 형태의 경로는 숫자 id를 params로 넘긴다
+  const patterns = [...routes].filter(([pattern]) => pattern.includes('/:'))
+    .map(([pattern, methods]) => {
+      const names = [];
+      const source = pattern.replace(/:([a-z]+)/gi, (_, name) => { names.push(name); return '([1-9][0-9]{0,15})'; });
+      return { regex: new RegExp(`^${source}$`), names, methods };
+    });
+  const findRoute = (path) => {
+    if (routes.has(path)) return { methods: routes.get(path), params: {} };
+    for (const { regex, names, methods } of patterns) {
+      const match = regex.exec(path);
+      if (match) return { methods, params: Object.fromEntries(names.map((name, index) => [name, Number(match[index + 1])])) };
+    }
+    return { methods: undefined, params: {} };
+  };
+
   return async (request, response, path) => {
     try {
-      const methods = routes.get(path);
+      const { methods, params } = findRoute(path);
       if (!methods) throw new ApiError(404, 'API_NOT_FOUND', 'API 경로를 찾을 수 없습니다.');
       const route = methods.get(request.method);
       if (!route) throw new ApiError(405, 'METHOD_NOT_ALLOWED', '지원하지 않는 메서드입니다.', undefined,
@@ -60,7 +76,7 @@ export function createApiRouter({ config, members, auth, now = Date.now, rateLim
         const input = await readJson(request);
         body = route.validate ? route.validate(input) : validateFields(input, route.fields, route.optional, route.passwordMinimum);
       }
-      await route.action(body, token, response);
+      await route.action(body, token, response, request, params);
     } catch (error) {
       if (!(error instanceof ApiError)) console.error('API 처리 실패:', error.name);
       if (!response.destroyed && !response.headersSent) sendApiError(response, error);

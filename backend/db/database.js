@@ -44,9 +44,10 @@ export function openDatabase(path) {
       transaction(db, () => {
         db.exec(readSql('schema.sql'));
         db.exec(readSql('posts-schema.sql'));
-        db.exec('PRAGMA user_version = 4');
+        db.exec(readSql('notices-schema.sql'));
+        db.exec('PRAGMA user_version = 6');
       });
-      version = 4;
+      version = 6;
     }
     if (version === 1) {
       transaction(db, () => {
@@ -68,7 +69,21 @@ export function openDatabase(path) {
       dropEmail(db);
       version = 4;
     }
-    if (version !== 4) throw new Error('Unsupported database schema version.');
+    if (version === 4) {
+      transaction(db, () => {
+        db.exec('ALTER TABLE members ADD COLUMN isAdmin INTEGER NOT NULL DEFAULT 0 CHECK (isAdmin IN (0, 1))');
+        db.exec('PRAGMA user_version = 5');
+      });
+      version = 5;
+    }
+    if (version === 5) {
+      transaction(db, () => {
+        db.exec(readSql('notices-schema.sql'));
+        db.exec('PRAGMA user_version = 6');
+      });
+      version = 6;
+    }
+    if (version !== 6) throw new Error('Unsupported database schema version.');
     return db;
   } catch (error) {
     db.close();

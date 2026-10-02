@@ -1,3 +1,5 @@
+import { initializeAccountMenu } from './account-menu.js';
+
 const desktopQuery = '(min-width: 840px)';
 
 export function initializeSiteHeader() {
@@ -11,10 +13,14 @@ export function initializeSiteHeader() {
     toggle.setAttribute('aria-label', open ? '모바일 메뉴 닫기' : '모바일 메뉴 열기');
     menu.hidden = !open;
   };
+  const closeAccount = initializeAccountMenu(header, () => setOpen(false));
 
   header.classList.add('site-header--interactive');
   toggle.hidden = false;
-  toggle.addEventListener('click', () => setOpen(menu.hidden));
+  toggle.addEventListener('click', () => {
+    closeAccount();
+    setOpen(menu.hidden);
+  });
   menu.addEventListener('click', (event) => {
     if (event.target.closest('a')) setOpen(false);
   });
@@ -38,6 +44,15 @@ export function initializeSiteHeader() {
 
 // 페이지 이동 없이 로그아웃한 경우 서버가 렌더링한 마이페이지 링크를 로그인 링크로 되돌린다
 export function showLoginLink() {
+  const account = document.querySelector('.site-header [data-account-menu]');
+  if (account) {
+    const login = document.createElement('a');
+    login.className = 'site-header__login';
+    login.href = '/login';
+    login.textContent = '로그인';
+    account.replaceWith(login);
+  }
+  document.querySelectorAll('.site-header [data-admin-link]').forEach(link => link.remove());
   document.querySelectorAll('.site-header__login').forEach((link) => {
     link.href = '/login';
     (link.querySelector('[data-account-label]') ?? link).textContent = '로그인';

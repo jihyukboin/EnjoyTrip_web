@@ -22,3 +22,13 @@ export function validatePost(body) {
   if (Object.keys(fields).length) throw new ApiError(400, 'VALIDATION_ERROR', '입력값을 확인해주세요.', fields);
   return result;
 }
+
+// ?page= 값이 없으면 1페이지, 있으면 1 이상의 정수만 허용한다
+export function validatePage(searchParams) {
+  const value = searchParams.get('page');
+  if (value === null) return 1;
+  if (!/^[1-9]\d{0,5}$/.test(value)) {
+    throw new ApiError(400, 'VALIDATION_ERROR', '입력값을 확인해주세요.', { page: '페이지는 1 이상의 정수여야 합니다.' });
+  }
+  return Number(value);
+}

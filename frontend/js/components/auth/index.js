@@ -4,8 +4,10 @@ import { getCurrentMember, issueTemporaryPassword, logIn, logOut, signUp } from 
 import { createAuthViews, guestViewFromHash } from './views.js';
 import { showLoginLink } from '../site-header.js';
 
-const AFTER_LOGIN_PATH = new URLSearchParams(location.search).get('returnTo') === '/post/write'
-  ? '/post/write' : '/mypage';
+// 로그인 후 돌아갈 수 있는 경로만 허용한다
+const RETURN_PATHS = new Set(['/post/write', '/admin', '/admin/notice']);
+const requestedPath = new URLSearchParams(location.search).get('returnTo');
+const AFTER_LOGIN_PATH = RETURN_PATHS.has(requestedPath) ? requestedPath : '/mypage';
 
 function renderAccount(view, member) {
   view.querySelector('[data-account-avatar]').textContent = [...member.name][0] ?? '';

@@ -8,7 +8,7 @@ import { createApi } from '../backend/api.js';
 import { createRequestHandler } from '../backend/app.js';
 import { openDatabase } from '../backend/db/database.js';
 import { SESSION_MS } from '../backend/auth/tokens.js';
-import { createPost } from '../frontend/js/api/post-api.js';
+import { createPost, listPosts } from '../frontend/js/api/post-api.js';
 import { logIn, signUp, logOut } from '../frontend/js/api/member-api.js';
 
 async function fixture(t, options = {}) {
@@ -94,4 +94,27 @@ test('빈 글·길이 초과·잘못된 필드와 작성자 위조·다른 출�
   assert.equal(api.db.prepare('SELECT count(*) AS n FROM posts').get().n, 0);
   const result = await api.call({ title: 'a'.repeat(100), content: '여'.repeat(2000) });
   assert.equal(result.status, 201);
+});
+
+test('게시글 목록은 최신 글부터 20개씩 나누고 잘못된 페이지 값을 거부한다', async t => {
+  const api = await fixture(t);
+  assert.deepEqual(await listPosts(), { posts: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 } });
+  await api.register();
+  const authorId = api.db.prepare('SELECT id FROM members').get().id;
+  const insert = api.db.prepare('INSERT INTO posts(author_id, title, content, created_at) VALUES (?, ?, ?, ?)');
+  for (let index = 1; index <= 41; index += 1) insert.run(authorId, `글 ${index}`, `본문 ${index}`, 1_000 * index);
+  const first = await listPosts(1);
+  assert.equal(first.posts.length, 20);
+  assert.equal(first.posts[0].title, '글 41');
+  assert.equal(first.posts[19].title, '글 22');
+  assert.deepEqual(first.posts[0].author, { id: 'writer', name: '작성자' });
+  assert.equal(first.posts[0].createdAt, new Date(41_000).toISOString());
+  assert.deepEqual(first.pagination, { page: 1, pageSize: 20, total: 41, totalPages: 3 });
+  assert.deepEqual((await listPosts(3)).posts.map(post => post.title), ['글 1']);
+  assert.equal((await listPosts(4)).posts.length, 0);
+  await logOut();
+  assert.equal((await listPosts(2)).posts[0].title, '글 21');
+  for (const page of ['0', '-1', '1.5', 'abc', '']) {
+    await assert.rejects(listPosts(page), error => error.status === 400 && error.field === 'page');
+  }
 });

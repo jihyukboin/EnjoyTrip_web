@@ -5,11 +5,9 @@ export function renderProfile(root, member) {
   const slot = name => root.querySelector(`[data-profile="${name}"]`);
   const joinedAt = new Date(member.joinedAt);
 
-  slot('avatar').textContent = [...member.name][0] ?? '';
   slot('name').textContent = member.name;
-  slot('id').textContent = `아이디 ${member.id}`;
-  slot('joinedAt').dateTime = member.joinedAt;
-  slot('joinedAt').textContent = dateFormat.format(joinedAt);
+  slot('id').value = member.id;
+  slot('joinedAt').value = dateFormat.format(joinedAt);
 }
 
 // 저장된 값을 기본값으로 지정한 뒤 reset해 새 비밀번호 입력란을 비운다

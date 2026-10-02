@@ -4,7 +4,8 @@ CREATE TABLE members (
   name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 50),
   password_hash TEXT NOT NULL,
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  isAdmin INTEGER NOT NULL DEFAULT 0 CHECK (isAdmin IN (0, 1))
 ) STRICT;
 
 CREATE TABLE sessions (

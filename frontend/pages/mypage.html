@@ -16,20 +16,17 @@
         <h1 class="mypage__title">마이페이지</h1>
 
         <section class="mypage__card" aria-labelledby="profile-title">
-          <h2 id="profile-title" class="mypage__heading">내 정보</h2>
-          <div class="mypage__profile">
-            <span class="avatar" data-profile="avatar" aria-hidden="true"></span>
-            <div>
-              <p class="mypage__name" data-profile="name"></p>
-              <p class="mypage__id" data-profile="id"></p>
+          <h2 id="profile-title" class="mypage__heading" data-profile="name"></h2>
+          <div class="form">
+            <div class="form-field">
+              <label for="profile-id">아이디</label>
+              <input id="profile-id" data-profile="id" readonly>
+            </div>
+            <div class="form-field">
+              <label for="profile-joined-at">가입일</label>
+              <input id="profile-joined-at" data-profile="joinedAt" readonly>
             </div>
           </div>
-          <dl class="mypage__details">
-            <div>
-              <dt>가입일</dt>
-              <dd><time data-profile="joinedAt"></time></dd>
-            </div>
-          </dl>
         </section>
 
         <section class="mypage__card" aria-labelledby="edit-title">

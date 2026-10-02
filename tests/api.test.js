@@ -16,7 +16,7 @@ async function fixture(t, options = {}) {
   const config = { origin: '', secureCookies: false, ...options.config };
   const server = createServer(createRequestHandler({
     apiHandler: createApi({ ...options, db, config }),
-    isLoggedIn: createSessionReader({ db, now: options.now })
+    readSession: createSessionReader({ db, now: options.now })
   }));
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${server.address().port}`;
@@ -60,6 +60,7 @@ test('가입·정규화·중복·로그인·본인 조회·수정·로그아웃�
   assert.equal(registered.headers.get('set-cookie'), null);
   assert.deepEqual(Object.keys(registered.json.data.member).sort(), ['createdAt', 'id', 'joinedAt', 'name', 'updatedAt']);
   const stored = api.db.prepare('SELECT * FROM members').get();
+  assert.equal(stored.isAdmin, 0);
   assert.match(stored.password_hash, /^scrypt\$131072\$8\$1\$/);
   assert.ok(!stored.password_hash.includes(password));
   const duplicate = await api.call('/api/members', { method: 'POST', body: signup });
@@ -215,7 +216,7 @@ test('비밀번호의 공백·Unicode를 보존하고 사용자 간 접근을 �
   assert.equal((await api.call('/api/members/1', { cookie: other.cookie })).status, 404);
 });
 
-test('헤더 계정 링크는 로그인 세션이 유효하면 마이페이지, 아니면 로그인으로 렌더링된다', async t => {
+test('헤더는 유효한 로그인 세션에 계정 드롭다운을 표시하고 관리자 링크를 구분한다', async t => {
   const api = await fixture(t);
   const header = async (cookie) => {
     const response = await fetch(api.origin + '/post', cookie ? { headers: { Cookie: cookie } } : {});
@@ -224,19 +225,46 @@ test('헤더 계정 링크는 로그인 세션이 유효하면 마이페이지, 
   const desktop = (html) => html.match(/class="site-header__login site-header__desktop-login" href="([^"]+)">([^<]+)<\/a>/).slice(1);
   const mobile = (html) => html.match(/class="site-header__login" href="([^"]+)">[\s\S]*?<span data-account-label>([^<]+)<\/span>/).slice(1);
   const assertAccount = (html, expected) => {
+    if (expected[0] === '/mypage') {
+      assert.match(html, /class="site-header__account-toggle"[\s\S]*?aria-expanded="false"[\s\S]*?<svg/);
+      assert.match(html, /id="site-account-panel" class="site-header__account-panel" hidden/);
+      assert.match(html, /href="\/mypage">마이페이지<\/a>/);
+      assert.match(html, /<button type="button" data-header-logout>로그아웃<\/button>/);
+      assert.ok(!html.includes('site-header__login'));
+      return;
+    }
     assert.deepEqual(desktop(html), expected);
     assert.deepEqual(mobile(html), expected);
+    assert.ok(!html.includes('data-account-menu'));
   };
 
   const guest = await header();
   assertAccount(guest, ['/login', '로그인']);
   assert.ok(!guest.includes('{{'));
+  assert.ok(!guest.includes('href="/admin"'));
 
   await api.register();
   const { cookie } = await api.login();
   assertAccount(await header(cookie), ['/mypage', '마이페이지']);
+  assert.ok(!(await header(cookie)).includes('href="/admin"'));
+
+  api.db.prepare('UPDATE members SET isAdmin = 1 WHERE username = ?').run(signup.id);
+  const admin = await header(cookie);
+  assertAccount(admin, ['/mypage', '마이페이지']);
+  assert.match(admin, /<nav class="site-header__navigation"[\s\S]*?<a href="\/admin" data-admin-link>관리자<\/a>[\s\S]*?<\/nav>/);
+  assert.match(admin, /<nav id="site-mobile-menu"[\s\S]*?<a href="\/admin" data-admin-link>관리자<\/a>[\s\S]*?<\/nav>/);
+
+  api.db.prepare('UPDATE members SET isAdmin = 0 WHERE username = ?').run(signup.id);
+  assert.ok(!(await header(cookie)).includes('href="/admin"'));
+  api.db.prepare('UPDATE members SET isAdmin = 1 WHERE username = ?').run(signup.id);
 
   await api.call('/api/auth/logout', { method: 'POST', body: {}, cookie });
   assertAccount(await header(cookie), ['/login', '로그인']);
   assertAccount(await header('enjoytrip_session=invalid'), ['/login', '로그인']);
+  assert.ok(!(await header(cookie)).includes('href="/admin"'));
+  assert.ok(!(await header('enjoytrip_session=invalid')).includes('href="/admin"'));
+
+  const expired = await api.login();
+  api.db.prepare('UPDATE sessions SET created_at = 1, expires_at = 2').run();
+  assert.ok(!(await header(expired.cookie)).includes('href="/admin"'));
 });

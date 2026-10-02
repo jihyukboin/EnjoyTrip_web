@@ -41,7 +41,7 @@ test('파일 DB 재시작·스키마 버전·외래 키·롤백을 검증한다'
   const path = join(directory, 'enjoytrip.sqlite');
   let db = openDatabase(path);
   try {
-    db.prepare('INSERT INTO members VALUES (?, ?, ?, ?, ?, ?)').run(1, 'testuser', '테스트', 'test-hash', 1, 1);
+    db.prepare('INSERT INTO members (id, username, name, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(1, 'testuser', '테스트', 'test-hash', 1, 1);
     db.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?)').run('a'.repeat(64), 1, 1, 2);
     assert.throws(() => db.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?)').run('b'.repeat(64), 999, 1, 2));
     assert.throws(() => transaction(db, () => {
@@ -52,7 +52,7 @@ test('파일 DB 재시작·스키마 버전·외래 키·롤백을 검증한다'
     db.close();
     db = openDatabase(path);
     assert.equal(db.prepare('SELECT name FROM members WHERE id = ?').get(1).name, '테스트');
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 4);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 6);
     assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
   } finally { if (db.isOpen) db.close(); }
 });
@@ -72,7 +72,7 @@ test('환경설정은 DB 공개 경로·운영 HTTP를 거부한다', () => {
   assert.equal(readConfig({ APP_ORIGIN: 'https://example.com' }).secureCookies, true);
 });
 
-test('버전 1 DB를 기존 회원·세션을 유지하며 아이디·게시글이 있고 이메일이 없는 버전 4로 변환한다', t => {
+test('버전 1 DB를 기존 회원·세션을 유지하며 아이디·게시글이 있고 이메일이 없고 관리자 여부가 있는 버전 5로 변환한다', t => {
   const directory = mkdtempSync(join(tmpdir(), 'enjoytrip-db-'));
   const path = join(directory, 'legacy.sqlite');
   t.after(() => rmSync(directory, { recursive: true, force: true }));
@@ -84,10 +84,10 @@ test('버전 1 DB를 기존 회원·세션을 유지하며 아이디·게시글�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 4);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 6);
     assert.equal(db.prepare('SELECT username FROM members').get().username, 'member1');
     assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 1);
-    assert.throws(() => db.prepare('INSERT INTO members VALUES (?, ?, ?, ?, ?, ?)')
+    assert.throws(() => db.prepare('INSERT INTO members (id, username, name, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
       .run(2, 'member1', '중복', 'hash', 1, 1));
   } finally { db.close(); }
 });
@@ -104,7 +104,7 @@ test('버전 2 회원 DB에 게시글 테이블을 추가하고 탈퇴 시 작�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 4);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 6);
     assert.equal(db.prepare('SELECT username FROM members').get().username, 'writer');
     db.prepare('INSERT INTO posts VALUES (?, ?, ?, ?, ?)').run(1, 1, '제목', '본문', 1);
     db.prepare('DELETE FROM members WHERE id = ?').run(1);
@@ -128,13 +128,13 @@ test('버전 3 DB에서 이메일 열·재설정 토큰 테이블을 제거하�
   legacy.close();
   const db = openDatabase(path);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 4);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 6);
     assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
     assert.deepEqual(db.prepare('PRAGMA table_info(members)').all().map(column => column.name),
-      ['id', 'username', 'name', 'password_hash', 'created_at', 'updated_at']);
+      ['id', 'username', 'name', 'password_hash', 'created_at', 'updated_at', 'isAdmin']);
     assert.equal(db.prepare("SELECT count(*) AS n FROM sqlite_schema WHERE name = 'password_reset_tokens'").get().n, 0);
     assert.deepEqual({ ...db.prepare('SELECT * FROM members').get() },
-      { id: 1, username: 'writer', name: '작성자', password_hash: 'hash', created_at: 1, updated_at: 2 });
+      { id: 1, username: 'writer', name: '작성자', password_hash: 'hash', created_at: 1, updated_at: 2, isAdmin: 0 });
     assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 1);
     assert.equal(db.prepare('SELECT count(*) AS n FROM posts').get().n, 1);
     // 재생성된 members를 sessions·posts가 계속 참조하며 탈퇴 시 CASCADE 된다
@@ -142,4 +142,34 @@ test('버전 3 DB에서 이메일 열·재설정 토큰 테이블을 제거하�
     assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 0);
     assert.equal(db.prepare('SELECT count(*) AS n FROM posts').get().n, 0);
   } finally { db.close(); }
+});
+
+
+test('버전 4 회원의 관리자 기본값·0/1 제약·재시작 후 권한 보존을 검증한다', t => {
+  const directory = mkdtempSync(join(tmpdir(), 'enjoytrip-db-'));
+  const path = join(directory, 'version4.sqlite');
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const legacy = new DatabaseSync(path);
+  const schema = readFileSync(new URL('../backend/db/schema.sql', import.meta.url), 'utf8');
+  legacy.exec(schema.replace(',\n  isAdmin INTEGER NOT NULL DEFAULT 0 CHECK (isAdmin IN (0, 1))', ''));
+  legacy.exec(postsSchema);
+  legacy.exec('PRAGMA user_version = 4');
+  legacy.prepare('INSERT INTO members VALUES (?, ?, ?, ?, ?, ?)').run(1, 'writer', '작성자', 'hash', 1, 2);
+  legacy.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?)').run('a'.repeat(64), 1, 1, 2);
+  legacy.prepare('INSERT INTO posts VALUES (?, ?, ?, ?, ?)').run(1, 1, '제목', '본문', 1);
+  legacy.close();
+  let db = openDatabase(path);
+  try {
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 6);
+    assert.equal(db.prepare('SELECT isAdmin FROM members WHERE id = 1').get().isAdmin, 0);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 1);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM posts').get().n, 1);
+    for (const value of [-1, 2, null]) {
+      assert.throws(() => db.prepare('UPDATE members SET isAdmin = ? WHERE id = 1').run(value));
+    }
+    db.prepare('UPDATE members SET isAdmin = 1 WHERE id = 1').run();
+    db.close();
+    db = openDatabase(path);
+    assert.equal(db.prepare('SELECT isAdmin FROM members WHERE id = 1').get().isAdmin, 1);
+  } finally { if (db.isOpen) db.close(); }
 });

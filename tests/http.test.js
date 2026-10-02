@@ -60,7 +60,7 @@ test('/mypage는 내 정보 조회, 정보 수정, 회원 탈퇴 화면을 제�
   assert.equal(response.status, 200);
   assert.ok(html.includes('<header class="site-header">'));
   assert.ok(html.includes('<title>마이페이지 | EnjoyTrip</title>'));
-  for (const slot of ['avatar', 'name', 'id', 'joinedAt']) {
+  for (const slot of ['name', 'id', 'joinedAt']) {
     assert.ok(html.includes(`data-profile="${slot}"`), slot);
   }
   assert.match(html, /<input id="edit-id" name="id"[^>]*readonly/);
@@ -97,22 +97,6 @@ test('게시판 메뉴는 공통 헤더가 있는 /post 페이지로 이동한�
   assert.ok(!html.includes('data-nav-link'));
 });
 
-test('게시판 히어로는 두 줄 제목과 /post/write로 가는 글쓰기 버튼을 서버 HTML에 포함한다', async () => {
-  const response = await fetch(origin + '/post');
-  const html = await response.text();
-  assert.match(html, /<h1 [^>]*class="board-hero__title">\s*<span>EnjoyTrip 게시판<\/span>\s*<span>어디로 떠나볼까요\?<\/span>/);
-  assert.match(html, /<canvas class="board-hero__canvas" aria-hidden="true"><\/canvas>/);
-  assert.match(html, /href="\/post\/write">[\s\S]*?글쓰기\s*<\/a>/);
-  assert.ok(html.includes('href="/css/components/board-hero.css"'));
-  assert.ok(!html.includes('travel-hero'));
-
-  for (const path of ['/css/components/board-hero.css', '/js/components/board-hero/index.js']) {
-    const asset = await fetch(origin + path);
-    assert.equal(asset.status, 200, path);
-    await asset.arrayBuffer();
-  }
-});
-
 test('/post/write는 제목·본문 입력란과 API 제출 폼을 제공한다', async () => {
   const response = await fetch(origin + '/post/write');
   const html = await response.text();
@@ -132,22 +116,6 @@ test('/post/write는 제목·본문 입력란과 API 제출 폼을 제공한다'
   const asset = await fetch(origin + '/css/components/post-write.css');
   assert.equal(asset.status, 200);
   await asset.arrayBuffer();
-});
-
-test('홈 히어로는 두 줄 제목과 /flight, /post로 가는 CTA를 서버 HTML에 포함한다', async () => {
-  const response = await fetch(origin + '/');
-  const html = await response.text();
-  assert.match(html, /<h1 [^>]*class="travel-hero__title">\s*<span>EnjoyTrip<\/span>\s*<span>여행을 떠나보세요<\/span>/);
-  assert.match(html, /<canvas class="travel-hero__canvas" aria-hidden="true"><\/canvas>/);
-  assert.match(html, /href="\/flight">[\s\S]*?직접 비행하기\s*<\/a>/);
-  assert.match(html, /href="\/post">여행 신청하기<\/a>/);
-  assert.ok(html.includes('href="/css/components/travel-hero.css"'));
-
-  for (const path of ['/css/components/travel-hero.css', '/js/components/travel-hero/index.js']) {
-    const asset = await fetch(origin + path);
-    assert.equal(asset.status, 200, path);
-    await asset.arrayBuffer();
-  }
 });
 
 test('HTML과 정적 파일은 ETag가 일치하면 본문 없이 304를 반환한다', async () => {

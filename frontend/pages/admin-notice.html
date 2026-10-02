@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>공지사항 관리 | EnjoyTrip</title>
+    <!-- document-head -->
+    <link rel="stylesheet" href="/css/components/form.css">
+    <link rel="stylesheet" href="/css/components/admin.css">
+  </head>
+  <body>
+    <!-- site-header -->
+    <main>
+      <div class="admin">
+        <!-- admin-nav -->
+        <section class="admin__dashboard" aria-labelledby="admin-notice-title" data-admin-notice>
+          <h1 id="admin-notice-title" class="admin__title">공지사항</h1>
+          <p class="admin__description">가장 최근에 등록한 공지가 모든 페이지의 헤더 아래에 표시됩니다.</p>
+
+          <form class="admin-notice__form form" data-notice-form novalidate>
+            <h2 class="admin__heading" data-notice-form-title>새 공지 등록</h2>
+            <div class="form-field">
+              <label for="notice-title">제목</label>
+              <input id="notice-title" name="title" required maxlength="100" aria-describedby="notice-title-error">
+              <p id="notice-title-error" class="form-field__error"></p>
+            </div>
+            <div class="form-field">
+              <label for="notice-content">내용</label>
+              <textarea id="notice-content" name="content" required maxlength="300" rows="4"
+                aria-describedby="notice-content-hint notice-content-error"></textarea>
+              <p id="notice-content-hint" class="form-field__hint">300자 이하</p>
+              <p id="notice-content-error" class="form-field__error"></p>
+            </div>
+            <p class="form-status" role="status"></p>
+            <div class="form-actions">
+              <button class="button button--secondary" type="button" data-notice-cancel hidden>취소</button>
+              <button class="button button--primary" type="submit" data-notice-submit>등록</button>
+            </div>
+          </form>
+
+          <p class="admin__status" role="status" data-notice-list-status>공지사항을 불러오는 중입니다.</p>
+          <div class="admin-table">
+            <table aria-label="공지사항 목록">
+              <thead>
+                <tr>
+                  <th scope="col">제목</th>
+                  <th scope="col">내용</th>
+                  <th scope="col">수정일</th>
+                  <th scope="col">관리</th>
+                </tr>
+              </thead>
+              <tbody data-notice-rows></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
