@@ -48,7 +48,7 @@ export function createNearbyService({ key, fetchImpl = fetch, now = Date.now }) 
         const category = TYPES.get(String(item.contenttypeid));
         if (!category || !item.title || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
         const location = distanceAndBearing(position, { lat, lng });
-        return { name: String(item.title), category, ...location };
+        return { name: String(item.title), category, lat, lng, ...location };
       }).filter(place => place && place.distance <= RADIUS_METERS / 1000)
         .sort((a, b) => a.distance - b.distance);
       const counts = new Map();

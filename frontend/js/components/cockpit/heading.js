@@ -2,7 +2,6 @@
 import { svg, svgText } from './dom.js';
 import { createInstrument } from './instrument.js';
 import { formatHeading } from './format.js';
-import { MOCK_TARGET } from './mock.js';
 
 const RADIUS = 72;
 const CARDINALS = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' };
@@ -28,17 +27,14 @@ function rose() {
       }, cardinal ?? degrees / 10));
     }
   }
-  // 목표 방위 버그
-  nodes.push(svg('path', {
-    class: 'target', d: `M-7 ${-RADIUS - 7}H7V${-RADIUS}H3L0 ${-RADIUS + 4}-3 ${-RADIUS}H-7Z`,
-    transform: `rotate(${MOCK_TARGET.heading})`
-  }));
   return nodes;
 }
 
 export function createHeading() {
   const instrument = createInstrument({ name: 'heading', variant: 'round', viewBox: '-100 -100 200 200', caption: '방위' });
   const card = svg('g', {}, rose());
+  const target = svg('path', { class: 'target', d: `M-7 ${-RADIUS - 7}H7V${-RADIUS}H3L0 ${-RADIUS + 4}-3 ${-RADIUS}H-7Z` });
+  card.append(target);
   const value = svgText({ class: 'value', y: -84, 'text-anchor': 'middle' }, '');
 
   instrument.root.append(
@@ -54,11 +50,12 @@ export function createHeading() {
 
   return {
     element: instrument.figure,
-    update({ heading }) {
+    update({ heading, targetHeading = heading }) {
+      target.setAttribute('transform', `rotate(${targetHeading})`);
       card.setAttribute('transform', `rotate(${-heading})`);
       const text = formatHeading(heading);
       value.textContent = text;
-      instrument.describe(`방위 ${text}도, 목표 ${formatHeading(MOCK_TARGET.heading)}도`);
+      instrument.describe(`방위 ${text}도, 목적지 ${formatHeading(targetHeading)}도`);
     }
   };
 }

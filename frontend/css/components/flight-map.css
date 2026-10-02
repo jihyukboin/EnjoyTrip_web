@@ -13,6 +13,19 @@
   background: #1c2329; color: #c7e8ff; border: 1px solid #8bcfff;
   font-size: 13px; font-weight: 600; white-space: nowrap;
 }
+.flight-map__place {
+  display: inline-block; padding: 4px 8px; border: 1px solid #788d9b; border-radius: 6px;
+  background: rgb(28 35 41 / 92%); color: #eef5fa;
+  font: inherit; font-size: 12px; white-space: nowrap; box-shadow: 0 2px 6px #0003; cursor: pointer;
+}
+.flight-map__place:hover, .flight-map__place[aria-pressed="true"] { border-color: #b9def8; }
+.flight-map__pause span { min-width: 0; overflow-wrap: anywhere; }
+.flight-map__navigation { position: absolute; z-index: 2; top: 98px; left: 50%; translate: -50% 0; display: flex; gap: 12px; align-items: center; padding: 8px 12px; border-radius: 8px; background: #14212bea; color: #d8ebf8; font-size: 12px; max-width: calc(100% - 72px); pointer-events: none; }
+.flight-map__navigation strong { white-space: nowrap; }
+.flight-map__pause { position: absolute; z-index: 5; bottom: 66px; left: 50%; translate: -50% 0; display: flex; align-items: center; gap: 16px; width: max-content; max-width: calc(100% - 32px); padding: 12px 16px; border: 1px solid #6d94af; border-radius: 12px; background: #14212bf5; color: #e6f4ff; box-shadow: 0 8px 30px #0005; font-size: 13px; }
+.flight-map__pause button { border: 0; border-radius: 7px; background: #bce1fb; color: #17354b; min-height: 40px; padding: 8px 12px; font: inherit; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.cockpit[data-exploring="true"] .hud__ownship { visibility: hidden; }
+@media (max-width: 800px) { .flight-map__navigation { top: 96px; width: max-content; flex-direction: column; gap: 3px; text-align: center; } }
 .flight-map__countdown {
   position: absolute; inset: 0; z-index: 6; display: grid; place-items: center;
   background: rgb(17 23 28 / 35%); color: #fff; font-size: 88px; font-weight: 700;

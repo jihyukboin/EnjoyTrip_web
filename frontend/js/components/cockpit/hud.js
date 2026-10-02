@@ -2,7 +2,6 @@
 // 지도는 북쪽이 위이므로 비행기 아이콘이 기수 방향으로 돈다
 import { element, svg, svgText } from './dom.js';
 import { formatHeading, formatNumber, normalizeDegrees } from './format.js';
-import { MOCK_TARGET } from './mock.js';
 import { createAircraft } from './aircraft.js';
 
 const RAD = Math.PI / 180;
@@ -24,9 +23,12 @@ function headingTape() {
       marks.push(svgText({ x: tapeX(degrees), y: 47, 'text-anchor': 'middle' }, tapeLabel(normalizeDegrees(degrees))));
     }
   }
+  const targets = [];
   for (const offset of [-360, 0, 360]) {
-    const x = tapeX(MOCK_TARGET.heading + offset);
-    marks.push(svg('path', { class: 'hud__target', d: `M${x - 6} 18H${x + 6}V24H${x + 3}L${x} 27 ${x - 3} 24H${x - 6}Z` }));
+    const x = tapeX(offset);
+    const target = svg('path', { class: 'hud__target', d: `M${x - 6} 18H${x + 6}V24H${x + 3}L${x} 27 ${x - 3} 24H${x - 6}Z` });
+    targets.push(target);
+    marks.push(target);
   }
   const moving = svg('g', {}, marks);
   const value = svgText({ x: TAPE_WIDTH / 2, y: 13, 'text-anchor': 'middle', 'font-size': 14 }, '');
@@ -38,7 +40,8 @@ function headingTape() {
   ]);
   return {
     root,
-    update(heading) {
+    update(heading, targetHeading) {
+      targets.forEach(target => target.setAttribute('transform', `translate(${targetHeading * PX_PER_DEGREE} 0)`));
       moving.setAttribute('transform', `translate(${-heading * PX_PER_DEGREE} 0)`);
       value.textContent = formatHeading(heading);
     }
@@ -104,7 +107,7 @@ export function createHud(container, routeLength = 10000) {
 
   return {
     update(state) {
-      tape.update(state.heading);
+      tape.update(state.heading, state.targetHeading ?? state.heading);
       plane.update(state);
       speed.value.textContent = Math.round(state.speed);
       altitude.value.textContent = formatNumber(Math.round(state.altitude / 10) * 10);

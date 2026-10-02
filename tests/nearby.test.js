@@ -26,6 +26,7 @@ test('공공데이터 위치 조회는 현재 좌표 반경 2km를 요청하고 
     assert.equal(url.searchParams.get('mapY'), String(position.lat));
   }
   assert.deepEqual(places.map(place => place.category), ['FD6', 'AT4']);
+  assert.deepEqual({ lat: places[1].lat, lng: places[1].lng }, { lat: 37.566826, lng: 126.98 });
   assert.ok(places[0].distance < places[1].distance);
   assert.ok(places[1].bearing > 80 && places[1].bearing < 100);
   assert.equal((await nearby(position)).length, 2);

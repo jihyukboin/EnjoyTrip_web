@@ -91,3 +91,9 @@
   .mfd__radar { display: none; }
   .mfd__list { padding-bottom: 0; overflow: visible; }
 }
+/* 목록 선택·새로고침 기능은 기존의 간결한 디자인에 맞춘다. */
+button.place { width: 100%; border: 0; border-bottom: 1px solid var(--ck-line); background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+button.place:hover, button.place[aria-pressed="true"] { background: rgb(255 255 255 / 4%); }
+.mfd__refresh { margin-left: auto; padding: 4px 0; border: 0; background: transparent; color: var(--ck-muted); font: inherit; font-size: 11px; cursor: pointer; }
+.mfd__refresh:disabled { opacity: .5; cursor: wait; }
+.mfd__hint { margin: 10px 0 0; color: var(--ck-muted); font-size: 11px; line-height: 1.5; }

@@ -10,6 +10,7 @@ function setup(t, { sdk = true, deferred = false } = {}) {
   const points = [];
   const routes = [];
   const markers = [];
+  const overlays = [];
   let load;
   let resize;
   let layoutCount = 0;
@@ -21,21 +22,54 @@ function setup(t, { sdk = true, deferred = false } = {}) {
     relayout() { layoutCount++; }
   }
   const globals = {
-    document: { createElement: () => ({}), querySelector: selector => ({ '[data-flight-map]': container, '.flight-map__status': status, '[data-map-retry]': retry })[selector] },
+    document: { createElement: () => ({ dataset: {}, setAttribute() {}, addEventListener() {} }), querySelector: selector => ({ '[data-flight-map]': container, '.flight-map__status': status, '[data-map-retry]': retry })[selector] },
     window: { addEventListener() {} },
     ResizeObserver: class { constructor(callback) { resize = callback; } observe() {} disconnect() {} },
     kakao: sdk ? { maps: { load(callback) { load = callback; if (!deferred) callback(); }, Map, LatLng,
       MapTypeId: { SKYVIEW: 2 }, ControlPosition: { RIGHT: 2 }, ZoomControl: class {},
+      event: { addListener() {} },
       Polyline: class { constructor(options) { routes.push(options.path); } },
-      Marker: class { constructor(options) { markers.push(options); } }, CustomOverlay: class {} } } : undefined
+      Marker: class { constructor(options) { Object.assign(this, options); markers.push(this); } setMap(map) { this.map = map; } },
+      CustomOverlay: class { constructor(options) { Object.assign(this, options); overlays.push(this); } setMap(map) { this.map = map; } } } } : undefined
   };
   for (const [key, value] of Object.entries(globals)) {
     const descriptor = Object.getOwnPropertyDescriptor(globalThis, key);
     Object.defineProperty(globalThis, key, { value, configurable: true, writable: true });
     t.after(() => { if (descriptor) Object.defineProperty(globalThis, key, descriptor); else delete globalThis[key]; });
   }
-  return { container, status, retry, points, routes, markers, load: () => load(), resize: () => resize(), layouts: () => layoutCount };
+  return { container, status, retry, points, routes, markers, overlays, load: () => load(), resize: () => resize(), layouts: () => layoutCount };
 }
+
+test('표시 목록의 장소만 핀으로 표시하고 목록 교체·비우기 시 기존 핀과 이름을 제거한다', t => {
+  const env = setup(t, { deferred: true });
+  const map = initializeFlightMap();
+  const first = { name: '관광지', lat: 37.56, lng: 126.98 };
+  const second = { name: '음식점', lat: 37.57, lng: 126.99 };
+  map.setPlaces([first]);
+  assert.equal(env.overlays.length, 0, '지도가 준비되기 전에는 표시를 보류한다');
+  env.load();
+  assert.equal(env.overlays[0].content.title, first.name);
+  assert.deepEqual({ ...env.overlays[0].position }, { lat: first.lat, lng: first.lng });
+  map.setPlaces([second]);
+  assert.equal(env.overlays[0].map, null);
+  assert.equal(env.overlays[1].content.title, second.name);
+  assert.equal(env.overlays[1].content.textContent, second.name);
+  map.setPlaces([]);
+  assert.ok(env.markers.every(marker => marker.map === null));
+  assert.ok(env.overlays.every(overlay => overlay.map === null));
+});
+
+test('장소를 둘러보는 동안 지도 중심을 유지하고 재개하면 비행기로 돌아온다', t => {
+  const env = setup(t);
+  const map = initializeFlightMap();
+  const place = { name: '장소', lat: 37.56, lng: 126.98 };
+  const state = { position: { lat: 37.5, lng: 127 } };
+  map.focusPlace(place);
+  map.update(state, 100);
+  assert.deepEqual({ ...env.points.at(-1) }, { lat: place.lat, lng: place.lng });
+  map.focusPlace(null);
+  assert.deepEqual({ ...env.points.at(-1) }, state.position);
+});
 
 test('게시글의 출발 좌표에서 지도를 열고 출발·도착 경로와 마커를 표시한다', t => {
   const env = setup(t);
