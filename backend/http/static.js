@@ -1,11 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderPage } from '../views/render-page.js';
+import { sendContent } from './response.js';
 
 const root = fileURLToPath(new URL('../../frontend/', import.meta.url));
 const contentTypes = {
-  '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
@@ -18,25 +17,16 @@ const contentTypes = {
   '.woff2': 'font/woff2'
 };
 
-export async function serveStatic(request, response) {
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    response.writeHead(405, { Allow: 'GET, HEAD' });
-    response.end();
-    return;
-  }
-
-  let pathname;
-  try {
-    pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-  } catch {
-    response.writeHead(400);
-    response.end();
-    return;
-  }
-
-  const filePath = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
+export async function serveStatic(request, response, pathname) {
+  const filePath = resolve(root, `.${pathname}`);
   if (!filePath.startsWith(resolve(root) + sep) || pathname.includes('\0')) {
     response.writeHead(403);
+    response.end();
+    return;
+  }
+
+  if (extname(filePath) === '.html') {
+    response.writeHead(404);
     response.end();
     return;
   }
@@ -53,14 +43,9 @@ export async function serveStatic(request, response) {
     throw error;
   }
 
-  if (extname(filePath) === '.html') {
-    content = await renderPage(content);
-  }
-
-  response.writeHead(200, {
-    'Content-Type': contentTypes[extname(filePath)] ?? 'application/octet-stream',
-    'Content-Length': content.length,
-    'Cache-Control': 'no-cache'
-  });
-  response.end(request.method === 'HEAD' ? undefined : content);
+  // 버전이 경로에 명시된 원본 폰트만 장기 캐시한다.
+  const cacheControl = pathname.startsWith('/assets/fonts/pretendard/1.3.9/')
+    ? 'public, max-age=31536000, immutable'
+    : 'public, no-cache';
+  sendContent(request, response, content, contentTypes[extname(filePath)] ?? 'application/octet-stream', cacheControl);
 }

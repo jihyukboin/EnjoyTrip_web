@@ -92,6 +92,40 @@
   transition: background-color 150ms, color 150ms;
 }
 
+.site-header__login {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #3182f6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.site-header__mobile-account {
+  display: flex;
+  padding-block: 14px;
+}
+
+.site-header__mobile-account .site-header__login {
+  width: 100%;
+  gap: 6px;
+  padding: 10px 8px;
+  line-height: 20px;
+}
+
+.site-header__mobile-account .site-header__login:hover {
+  background: #1b64da;
+}
+
 .site-header__toggle:hover {
   background: #f1f5f9;
   color: rgb(26 31 41 / 92%);
@@ -122,7 +156,7 @@
   box-shadow: 0 8px 24px rgb(0 0 0 / 8%);
 }
 
-.site-header__mobile-menu a {
+.site-header__mobile-menu > a {
   display: flex;
   padding-block: 14px;
   border-bottom: 1px solid #f1f3f5;
@@ -132,12 +166,13 @@
   line-height: 20px;
 }
 
-.site-header__mobile-menu a:hover {
+.site-header__mobile-menu > a:hover {
   background: #f8fafc;
 }
 
 @media (max-width: 839px) {
-  .site-header--interactive .site-header__navigation {
+  .site-header--interactive .site-header__navigation,
+  .site-header--interactive .site-header__desktop-login {
     display: none;
   }
 }
@@ -145,7 +180,7 @@
 @media (min-width: 840px) {
   .site-header__bar {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
   .site-header__brand {

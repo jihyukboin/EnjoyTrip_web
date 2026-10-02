@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "node --env-file-if-exists=.env --watch backend/index.js",
-    "start": "node --env-file-if-exists=.env backend/index.js"
+    "start": "node --env-file-if-exists=.env backend/index.js",
+    "test": "node --test"
   }
 }
