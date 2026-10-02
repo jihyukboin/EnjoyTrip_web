@@ -97,6 +97,20 @@ test('게시판 메뉴는 공통 헤더가 있는 /post 페이지로 이동한�
   assert.ok(!html.includes('data-nav-link'));
 });
 
+test('/flight는 항공권 카드 목록 화면과 정적 파일을 제공한다', async () => {
+  const response = await fetch(origin + '/flight');
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.ok(html.includes('<header class="site-header">'));
+  assert.ok(html.includes('data-flight-list'));
+  assert.ok(html.includes('href="/css/components/flight-ticket.css"'));
+  for (const path of ['/css/components/flight-ticket.css', '/js/components/flight/index.js', '/js/components/flight/ticket.js']) {
+    const asset = await fetch(origin + path);
+    assert.equal(asset.status, 200, path);
+    await asset.arrayBuffer();
+  }
+});
+
 test('/post/detail는 게시글 상세 화면과 목록 링크를 제공한다', async () => {
   const response = await fetch(origin + '/post/detail?id=1');
   const html = await response.text();

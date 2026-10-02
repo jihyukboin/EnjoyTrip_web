@@ -2,6 +2,7 @@
 import { getCurrentMember } from '../../api/member-api.js';
 import { createPost } from '../../api/post-api.js';
 import { bindForm, showStatus } from '../form-controls.js';
+import { bindAddressSearch, checkAddresses } from './address-search.js';
 import { prepareEdit } from './edit.js';
 
 const loginPath = () => `/login?returnTo=${encodeURIComponent(location.pathname + location.search)}`;
@@ -31,7 +32,9 @@ export async function initializePostWrite() {
   }
   fields.disabled = false;
   showStatus(status, '');
+  bindAddressSearch(form);
   bindForm(form, async values => {
+    checkAddresses(values);
     try {
       await submitPost(values);
     } catch (error) {

@@ -7,6 +7,7 @@
     <!-- document-head -->
     <link rel="stylesheet" href="/css/components/form.css">
     <link rel="stylesheet" href="/css/components/post-write.css">
+    <script src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" defer></script>
   </head>
   <body>
     <!-- site-header -->
@@ -20,6 +21,18 @@
               <label for="post-title">제목</label>
               <input id="post-title" name="title" required maxlength="100" placeholder="제목을 입력하세요" aria-describedby="post-title-error">
               <p id="post-title-error" class="form-field__error"></p>
+            </div>
+            <div class="post-write__route">
+              <div class="form-field">
+                <label for="post-origin">시작점</label>
+                <input id="post-origin" name="origin" readonly data-address-search placeholder="눌러서 주소를 검색하세요" aria-describedby="post-origin-error">
+                <p id="post-origin-error" class="form-field__error"></p>
+              </div>
+              <div class="form-field">
+                <label for="post-destination">도착점</label>
+                <input id="post-destination" name="destination" readonly data-address-search placeholder="눌러서 주소를 검색하세요" aria-describedby="post-destination-error">
+                <p id="post-destination-error" class="form-field__error"></p>
+              </div>
             </div>
             <div class="form-field">
               <label for="post-content">본문</label>

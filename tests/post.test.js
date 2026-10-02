@@ -12,6 +12,9 @@ import { createPost, deletePost, getNotice, getPost, listPosts, updatePost } fro
 import { request } from '../frontend/js/api/client.js';
 import { logIn, signUp, logOut } from '../frontend/js/api/member-api.js';
 
+// 주소 검색으로 고른 시작점·도착점
+const route = { origin: '서울 중구 세종대로 110', destination: '부산 해운대구 해운대해변로 264' };
+
 async function fixture(t, options = {}) {
   const directory = mkdtempSync(join(tmpdir(), 'enjoytrip-post-'));
   const path = join(directory, 'posts.sqlite');
@@ -53,9 +56,9 @@ async function fixture(t, options = {}) {
 test('프론트 게시글 API는 로그인 작성자의 글을 저장하고 로그아웃·만료 세션을 거부한다', async t => {
   let time = Date.now();
   const api = await fixture(t, { now: () => time });
-  await assert.rejects(createPost({ title: '제목', content: '내용' }), error => error.code === 'UNAUTHENTICATED');
+  await assert.rejects(createPost({ title: '제목', content: '내용', ...route }), error => error.code === 'UNAUTHENTICATED');
   await api.register();
-  const post = await createPost({ title: '  여행 후기  ', content: '첫 줄\n둘째 줄 <script>alert(1)</script>' });
+  const post = await createPost({ title: '  여행 후기  ', content: '첫 줄\n둘째 줄 <script>alert(1)</script>', ...route });
   assert.equal(post.title, '여행 후기');
   assert.deepEqual(post.author, { id: 'writer', name: '작성자' });
   assert.equal(post.createdAt, new Date(time).toISOString());
@@ -67,10 +70,10 @@ test('프론트 게시글 API는 로그인 작성자의 글을 저장하고 로�
   try { assert.equal(reopened.prepare('SELECT title FROM posts').get().title, post.title); }
   finally { reopened.close(); }
   await logOut();
-  assert.equal((await api.call({ title: '제목', content: '본문' })).status, 401);
+  assert.equal((await api.call({ title: '제목', content: '본문', ...route })).status, 401);
   await logIn({ id: 'writer', password: 'password1' });
   time += SESSION_MS;
-  assert.equal((await api.call({ title: '제목', content: '본문' })).status, 401);
+  assert.equal((await api.call({ title: '제목', content: '본문', ...route })).status, 401);
   assert.equal(api.db.prepare('SELECT count(*) AS n FROM posts').get().n, 1);
 });
 
@@ -78,22 +81,22 @@ test('빈 글·길이 초과·잘못된 필드와 작성자 위조·다른 출�
   const api = await fixture(t);
   await api.register();
   for (const body of [
-    { title: ' ', content: '내용' }, { title: '제목', content: '\n ' },
-    { title: 'a'.repeat(101), content: '내용' }, { title: '제목', content: 'a'.repeat(2001) },
-    { title: 123, content: '내용' }, { title: '제목', content: '\ud800' },
-    { title: '제목', content: 'a\0b' },
+    { title: ' ', content: '내용', ...route }, { title: '제목', content: '\n ', ...route },
+    { title: 'a'.repeat(101), content: '내용', ...route }, { title: '제목', content: 'a'.repeat(2001), ...route },
+    { title: 123, content: '내용', ...route }, { title: '제목', content: '\ud800', ...route },
+    { title: '제목', content: 'a\0b', ...route },
     { title: '제목', content: '내용', authorId: 99 }
   ]) {
     const result = await api.call(body);
     assert.equal(result.status, 400);
     assert.equal(result.json.error.code, 'VALIDATION_ERROR');
   }
-  const invalidOrigin = await api.call({ title: '제목', content: '내용' }, { Origin: 'https://other.example' });
+  const invalidOrigin = await api.call({ title: '제목', content: '내용', ...route }, { Origin: 'https://other.example' });
   assert.equal(invalidOrigin.status, 403);
-  const missingHeader = await api.call({ title: '제목', content: '내용' }, { 'X-EnjoyTrip-Request': '' });
+  const missingHeader = await api.call({ title: '제목', content: '내용', ...route }, { 'X-EnjoyTrip-Request': '' });
   assert.equal(missingHeader.status, 403);
   assert.equal(api.db.prepare('SELECT count(*) AS n FROM posts').get().n, 0);
-  const result = await api.call({ title: 'a'.repeat(100), content: '여'.repeat(2000) });
+  const result = await api.call({ title: 'a'.repeat(100), content: '여'.repeat(2000), ...route });
   assert.equal(result.status, 201);
 });
 
@@ -136,27 +139,27 @@ test('게시글 상세·수정·삭제는 작성자 본인만 변경할 수 있�
   const api = await fixture(t);
   await assert.rejects(getPost(1), error => error.status === 404 && error.code === 'POST_NOT_FOUND');
   await api.register();
-  const post = await createPost({ title: '원래 제목', content: '원래 본문' });
+  const post = await createPost({ title: '원래 제목', content: '원래 본문', ...route });
   assert.deepEqual(await getPost(post.id), { ...post, author: { id: 'writer', name: '작성자' } });
 
-  const updated = await updatePost(post.id, { title: '  바뀐 제목 ', content: '바뀐\n본문' });
+  const updated = await updatePost(post.id, { title: '  바뀐 제목 ', content: '바뀐\n본문', ...route });
   assert.deepEqual(updated, { ...post, title: '바뀐 제목', content: '바뀐\n본문', author: { id: 'writer', name: '작성자' } });
   assert.equal(api.db.prepare('SELECT title FROM posts WHERE id = ?').get(post.id).title, '바뀐 제목');
-  await assert.rejects(updatePost(post.id, { title: ' ', content: '본문' }), error => error.status === 400 && error.field === 'title');
-  await assert.rejects(updatePost(999, { title: '제목', content: '본문' }), error => error.status === 404);
+  await assert.rejects(updatePost(post.id, { title: ' ', content: '본문', ...route }), error => error.status === 400 && error.field === 'title');
+  await assert.rejects(updatePost(999, { title: '제목', content: '본문', ...route }), error => error.status === 404);
   await assert.rejects(deletePost(999), error => error.status === 404);
 
   // 다른 회원은 수정·삭제할 수 없다
   await logOut();
   await signUp({ id: 'other', name: '다른회원', password: 'password1' });
   await logIn({ id: 'other', password: 'password1' });
-  await assert.rejects(updatePost(post.id, { title: '탈취', content: '탈취' }), error => error.status === 403 && error.code === 'FORBIDDEN');
+  await assert.rejects(updatePost(post.id, { title: '탈취', content: '탈취', ...route }), error => error.status === 403 && error.code === 'FORBIDDEN');
   await assert.rejects(deletePost(post.id), error => error.status === 403);
   assert.equal(api.db.prepare('SELECT title FROM posts WHERE id = ?').get(post.id).title, '바뀐 제목');
 
   // 비로그인은 401, 삭제 본문에 필드가 있으면 400
   await logOut();
-  await assert.rejects(updatePost(post.id, { title: '제목', content: '본문' }), error => error.status === 401);
+  await assert.rejects(updatePost(post.id, { title: '제목', content: '본문', ...route }), error => error.status === 401);
   await assert.rejects(deletePost(post.id), error => error.status === 401);
   await logIn({ id: 'writer', password: 'password1' });
   await assert.rejects(request(`/api/posts/${post.id}`, { method: 'DELETE', body: { force: true } }),
@@ -170,7 +173,7 @@ test('게시글 상세·수정·삭제는 작성자 본인만 변경할 수 있�
 test('로그인 없이 게시글 목록·게시글 상세·공지 상세와 해당 페이지를 조회할 수 있다', async t => {
   const api = await fixture(t);
   await api.register();
-  const post = await createPost({ title: '공개 글', content: '공개 본문' });
+  const post = await createPost({ title: '공개 글', content: '공개 본문', ...route });
   const noticeId = Number(api.db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)')
     .run('공개 공지', '공지 본문', 1_000, 1_000).lastInsertRowid);
   await logOut();

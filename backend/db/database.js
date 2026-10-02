@@ -83,7 +83,14 @@ export function openDatabase(path) {
       });
       version = 6;
     }
-    if (version !== 6) throw new Error('Unsupported database schema version.');
+    if (version === 6) {
+      transaction(db, () => {
+        db.exec(readSql('posts-route.sql'));
+        db.exec('PRAGMA user_version = 7');
+      });
+      version = 7;
+    }
+    if (version !== 7) throw new Error('Unsupported database schema version.');
     return db;
   } catch (error) {
     db.close();

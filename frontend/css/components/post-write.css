@@ -1,4 +1,4 @@
-/* /post/write 화면: 제목·본문 입력 */
+/* /post/write 화면: 제목·시작점·도착점·본문 입력 */
 .post-write {
   display: grid;
   gap: 16px;
@@ -34,4 +34,16 @@
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+/* 시작점·도착점은 넓은 화면에서 나란히 둔다 */
+.post-write__route {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* 주소 입력란은 직접 입력하지 않고 눌러서 주소 검색 창을 연다 */
+.post-write__card input[data-address-search] {
+  cursor: pointer;
 }

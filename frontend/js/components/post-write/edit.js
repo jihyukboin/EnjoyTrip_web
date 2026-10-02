@@ -12,6 +12,8 @@ export async function prepareEdit(form, member) {
   form.querySelector('[type="submit"]').textContent = '수정 저장';
   form.elements.title.value = post.title;
   form.elements.content.value = post.content;
+  form.elements.origin.value = post.origin;
+  form.elements.destination.value = post.destination;
 
   return async values => {
     await updatePost(id, values);

@@ -11,6 +11,7 @@ const pages = new Map([
   ['/post/write', new URL('../../frontend/pages/post-write.html', import.meta.url)],
   ['/post/detail', new URL('../../frontend/pages/post-detail.html', import.meta.url)],
   ['/post/edit', new URL('../../frontend/pages/post-write.html', import.meta.url)],
+  ['/flight', new URL('../../frontend/pages/flight.html', import.meta.url)],
   ['/admin', new URL('../../frontend/pages/admin.html', import.meta.url)],
   ['/admin/notice', new URL('../../frontend/pages/admin-notice.html', import.meta.url)]
 ]);
