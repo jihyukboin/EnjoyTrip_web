@@ -17,7 +17,9 @@ function pageLink(page, label, { current = false, disabled = false, ariaLabel } 
   }
   const link = document.createElement('a');
   link.className = 'pagination__link';
-  link.href = `?page=${page}`;
+  const params = new URLSearchParams(location.search);
+  params.set('page', page);
+  link.href = `?${params}`;
   link.dataset.page = String(page);
   link.textContent = label;
   if (ariaLabel) link.setAttribute('aria-label', ariaLabel);

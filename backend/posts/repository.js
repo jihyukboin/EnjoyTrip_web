@@ -10,12 +10,18 @@ const toPost = row => ({
 
 export function createPostRepository(db) {
   const insert = db.prepare('INSERT INTO posts(author_id, title, content, origin, destination, created_at) VALUES (?, ?, ?, ?, ?, ?)');
-  const count = db.prepare('SELECT (SELECT count(*) FROM posts) + (SELECT count(*) FROM notices) AS total');
-  const page = db.prepare(`SELECT 'post' AS type, p.id, p.title, p.content, p.origin, p.destination, p.created_at, m.username, m.name
+  const source = `SELECT 'post' AS type, p.id, p.title, p.content, p.origin, p.destination, p.created_at, m.username, m.name
     FROM posts p JOIN members m ON m.id = p.author_id
     UNION ALL
     SELECT 'notice' AS type, id, title, content, '' AS origin, '' AS destination, created_at, NULL AS username, '공지사항' AS name FROM notices
-    ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`);
+    `;
+  // 검색어는 바인딩하고 열은 고정 CASE로 선택한다. %, _도 일반 문자로 검색한다.
+  const filtered = `SELECT * FROM (${source}) WHERE (? = '' OR type = ?)
+    AND (? = '' OR instr(lower(CASE ? WHEN 'title' THEN title WHEN 'content' THEN content
+      WHEN 'origin' THEN origin WHEN 'destination' THEN destination END), lower(?)) > 0)`;
+  const count = db.prepare(`SELECT count(*) AS total FROM (${filtered})`);
+  const page = db.prepare(`${filtered} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`);
+  const searchValues = ({ scope = '', field = 'title', q = '' } = {}) => [scope, scope, q, field, q];
   const byId = db.prepare(`SELECT p.id, p.author_id, p.title, p.content, p.origin, p.destination, p.created_at, m.username, m.name
     FROM posts p JOIN members m ON m.id = p.author_id WHERE p.id = ?`);
   const update = db.prepare('UPDATE posts SET title = ?, content = ?, origin = ?, destination = ? WHERE id = ?');
@@ -25,9 +31,9 @@ export function createPostRepository(db) {
       const id = Number(insert.run(authorId, title, content, origin, destination, time).lastInsertRowid);
       return { id, title, content, origin, destination, createdAt: new Date(time).toISOString() };
     },
-    count: () => count.get().total,
+    count: search => count.get(...searchValues(search)).total,
     // type은 'post' 또는 'notice'. 상세 페이지 주소를 고르는 데 쓴다
-    list: (limit, offset) => page.all(limit, offset).map(row => ({ type: row.type, ...toPost(row) })),
+    list: (limit, offset, search) => page.all(...searchValues(search), limit, offset).map(row => ({ type: row.type, ...toPost(row) })),
     // 권한 확인용으로 작성자 회원 번호(authorId)를 함께 돌려준다
     byId(id) {
       const row = byId.get(id);

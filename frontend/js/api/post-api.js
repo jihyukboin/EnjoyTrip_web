@@ -5,7 +5,8 @@ const postPath = id => `/api/posts/${encodeURIComponent(id)}`;
 export const createPost = async ({ title, content, origin, destination }) =>
   (await request('/api/posts', { method: 'POST', body: { title, content, origin, destination } })).post;
 
-export const listPosts = (page = 1) => request(`/api/posts?page=${encodeURIComponent(page)}`);
+export const listPosts = (page = 1, { field = 'title', q = '', scope = '' } = {}) =>
+  request(`/api/posts?${new URLSearchParams({ page, field, q, scope })}`);
 
 export const getPost = async id => (await request(postPath(id))).post;
 

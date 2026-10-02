@@ -124,6 +124,42 @@ test('본문 없이 글을 등록·조회하고 본문 삭제와 출발·도착 
   assert.equal(api.db.prepare('SELECT content FROM posts WHERE id = ?').get(post.id).content, '');
 });
 
+test('네 검색 항목·검색 결과 페이지·항공권 범위·특수문자와 잘못된 조건을 검증한다', async t => {
+  const api = await fixture(t);
+  await api.register();
+  const authorId = api.db.prepare('SELECT id FROM members').get().id;
+  const insert = api.db.prepare('INSERT INTO posts(author_id, title, content, origin, destination, created_at) VALUES (?, ?, ?, ?, ?, ?)');
+  for (const field of ['title', 'content', 'origin', 'destination']) {
+    const values = { title: '보통 제목', content: '보통 내용', origin: '서울', destination: '부산', [field]: '표적 값' };
+    insert.run(authorId, values.title, values.content, values.origin, values.destination, 1000);
+  }
+  for (const field of ['title', 'content', 'origin', 'destination']) {
+    const result = await listPosts(1, { field, q: '  표적  ' });
+    assert.equal(result.posts.length, 1);
+    assert.equal(result.posts[0][field], '표적 값');
+    assert.equal(result.pagination.total, 1);
+  }
+  for (let i = 0; i < 21; i++) insert.run(authorId, `검색 페이지 ${i}`, '내용', '서울', '부산', 2000 + i);
+  api.db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)')
+    .run('검색 페이지 공지', '공지 내용', 5000, 5000);
+  const first = await listPosts(1, { q: '검색 페이지' });
+  assert.equal(first.pagination.total, 22);
+  assert.equal(first.posts.length, 20);
+  assert.equal((await listPosts(2, { q: '검색 페이지' })).posts.length, 2);
+  const tickets = await listPosts(2, { q: '검색 페이지', scope: 'post' });
+  assert.equal(tickets.pagination.total, 21);
+  assert.equal(tickets.posts.length, 1);
+  assert.ok(tickets.posts.every(post => post.type === 'post'));
+  insert.run(authorId, '100%_일정', '내용', '서울', '부산', 6000);
+  assert.equal((await listPosts(1, { q: '%_' })).posts[0].title, '100%_일정');
+  assert.equal((await listPosts(1, { q: "' OR 1=1 --" })).pagination.total, 0);
+  assert.equal((await listPosts(1, { q: '없는 검색어' })).posts.length, 0);
+  assert.equal((await listPosts(1, { q: '  ' })).pagination.total, 27);
+  for (const search of [{ field: 'author' }, { scope: 'notice' }, { q: 'a'.repeat(201) }]) {
+    await assert.rejects(listPosts(1, search), error => error.status === 400);
+  }
+});
+
 test('게시글 목록은 최신 글부터 20개씩 나누고 잘못된 페이지 값을 거부한다', async t => {
   const api = await fixture(t);
   assert.deepEqual(await listPosts(), { posts: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 } });

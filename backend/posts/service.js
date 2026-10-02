@@ -26,11 +26,11 @@ export function createPostService({ posts, auth, now = Date.now }) {
       return found.post;
     },
     // 최신 글부터 20개씩 나눠 요청한 페이지를 돌려준다
-    list(page) {
-      const total = posts.count();
+    list(page, search = {}) {
+      const total = posts.count(search);
       const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
       return {
-        posts: posts.list(PAGE_SIZE, (page - 1) * PAGE_SIZE),
+        posts: posts.list(PAGE_SIZE, (page - 1) * PAGE_SIZE, search),
         pagination: { page, pageSize: PAGE_SIZE, total, totalPages }
       };
     },

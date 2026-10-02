@@ -40,3 +40,15 @@ export function validatePage(searchParams) {
   }
   return Number(value);
 }
+
+export function validateSearch(params) {
+  const field = params.get('field') ?? 'title';
+  const q = (params.get('q') ?? '').trim();
+  const scope = params.get('scope') ?? '';
+  const fields = {};
+  if (!['title', 'content', 'origin', 'destination'].includes(field)) fields.field = '올바른 검색 항목을 선택해주세요.';
+  if (!q.isWellFormed() || [...q].length > 200 || singleLine.test(q)) fields.q = '검색어는 200자 이내로 입력해주세요.';
+  if (!['', 'post'].includes(scope)) fields.scope = '올바른 목록 범위가 필요합니다.';
+  if (Object.keys(fields).length) throw new ApiError(400, 'VALIDATION_ERROR', '검색 조건을 확인해주세요.', fields);
+  return { field, q, scope };
+}

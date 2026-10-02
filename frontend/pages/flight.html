@@ -7,12 +7,24 @@
     <!-- document-head -->
     <link rel="stylesheet" href="/css/components/post-list.css">
     <link rel="stylesheet" href="/css/components/flight-ticket.css">
+    <link rel="stylesheet" href="/css/components/list-search.css">
   </head>
   <body>
     <!-- site-header -->
     <main>
       <section class="flight" aria-labelledby="flight-title" data-flight-list>
         <h1 id="flight-title" class="flight__title">항공권</h1>
+        <form class="list-search" data-list-search action="/flight" method="get" role="search" aria-label="항공권 검색">
+          <select name="field" aria-label="검색 항목">
+            <option value="title">제목</option>
+            <option value="content">내용</option>
+            <option value="origin">출발지</option>
+            <option value="destination">도착지</option>
+          </select>
+          <input name="q" type="search" maxlength="200" placeholder="검색어를 입력하세요" aria-label="검색어">
+          <button type="submit">검색</button>
+          <a class="list-search__reset" href="/flight">초기화</a>
+        </form>
         <p class="flight__status" role="status">항공권을 불러오는 중입니다.</p>
         <ol class="flight__items"></ol>
         <nav class="pagination" aria-label="항공권 페이지" hidden></nav>

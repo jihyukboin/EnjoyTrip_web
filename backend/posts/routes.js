@@ -1,6 +1,6 @@
 import { sendJson } from '../http/api-response.js';
 import { validateEmpty } from '../http/json-body.js';
-import { validatePage, validatePost } from './validation.js';
+import { validatePage, validatePost, validateSearch } from './validation.js';
 
 export function createPostRoutes({ posts, auth }) {
   // 변경 요청은 본문을 읽기 전에 로그인 세션을 확인한다
@@ -11,8 +11,8 @@ export function createPostRoutes({ posts, auth }) {
     ['/api/posts', new Map([
       ['GET', {
         action(body, token, response, request) {
-          const page = validatePage(new URL(request.url, 'http://localhost').searchParams);
-          sendJson(response, 200, { data: posts.list(page) });
+          const params = new URL(request.url, 'http://localhost').searchParams;
+          sendJson(response, 200, { data: posts.list(validatePage(params), validateSearch(params)) });
         }
       }],
       ['POST', mutation(validatePost, (body, token, response) => {

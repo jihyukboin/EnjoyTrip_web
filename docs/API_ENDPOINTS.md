@@ -41,3 +41,5 @@
 `GET /api/maps/config`는 로그인 없이 지도 SDK용 공개 JavaScript 키를 `data.javascriptKey`로 반환합니다. 서버의 `KAKAO_MAP_JAVASCRIPT_KEY`가 미설정이면 503 `MAP_NOT_CONFIGURED`를 반환합니다. REST API 키는 반환하지 않습니다.
 
 목록은 공지사항을 포함해 최신순으로 20개씩 반환하며 각 항목의 `type`은 `post` 또는 `notice`입니다. 공지 상세 조회는 로그인 없이 가능합니다. `pagination`은 `page`, `pageSize`, `total`, `totalPages`를 포함하며 마지막 페이지를 넘으면 빈 목록을 반환합니다.
+
+목록 검색은 `GET /api/posts?page=1&field=title&q=부산`으로 요청합니다. `field`는 `title`(제목, 기본값), `content`(내용), `origin`(출발지), `destination`(도착지) 중 하나이며 `q`는 최대 200자입니다. 선택한 항목에 검색어가 포함된 결과만 반환하며 빈 검색어는 전체 목록을 반환합니다. `%`, `_`는 일반 문자로 검색합니다. `scope=post`를 추가하면 공지사항을 제외한 항공권 대상 게시글만 조회합니다. 검색 결과 기준으로 전체 개수와 페이지 수를 계산합니다.

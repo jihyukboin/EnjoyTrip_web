@@ -2,6 +2,7 @@ import { getCurrentMember } from '../../api/member-api.js';
 import { deletePost, listPosts } from '../../api/post-api.js';
 import { renderPagination } from './pagination.js';
 import { renderPost } from './item.js';
+import { bindSearch, readSearch } from './search.js';
 
 function readPage() {
   const value = new URLSearchParams(location.search).get('page');
@@ -20,14 +21,17 @@ export async function initializePostList() {
   const list = section.querySelector('.post-list__items');
   const status = section.querySelector('.post-list__status');
   const nav = section.querySelector('.pagination');
+  const syncSearch = bindSearch(section);
   const memberId = await currentMemberId();
 
   const load = async page => {
     section.setAttribute('aria-busy', 'true');
+    syncSearch();
     try {
-      const { posts, pagination } = await listPosts(page);
+      const search = readSearch();
+      const { posts, pagination } = await listPosts(page, search);
       list.replaceChildren(...posts.map(post => renderPost(post, memberId)));
-      status.textContent = posts.length ? '' : '등록된 게시글이 없습니다.';
+      status.textContent = posts.length ? '' : search.q ? '검색 결과가 없습니다.' : '등록된 게시글이 없습니다.';
       renderPagination(nav, pagination);
       return pagination;
     } catch (error) {
@@ -70,7 +74,9 @@ export async function initializePostList() {
     const page = readPage();
     const pagination = await load(page);
     if (pagination && page > pagination.totalPages) {
-      history.replaceState(null, '', `?page=${pagination.totalPages}`);
+      const params = new URLSearchParams(location.search);
+      params.set('page', pagination.totalPages);
+      history.replaceState(null, '', `?${params}`);
       await load(pagination.totalPages);
     }
     status.textContent = message;
