@@ -4,6 +4,7 @@ import { createPost } from '../../api/post-api.js';
 import { bindForm, showStatus } from '../form-controls.js';
 import { bindAddressSearch, checkAddresses } from './address-search.js';
 import { prepareEdit } from './edit.js';
+import { createRouteMap } from '../route-map/index.js';
 
 const loginPath = () => `/login?returnTo=${encodeURIComponent(location.pathname + location.search)}`;
 
@@ -33,6 +34,12 @@ export async function initializePostWrite() {
   fields.disabled = false;
   showStatus(status, '');
   bindAddressSearch(form);
+  const showRoute = createRouteMap(form.querySelector('[data-route-map]'));
+  const refreshRoute = () => showRoute(form.elements.origin.value, form.elements.destination.value);
+  form.addEventListener('input', event => {
+    if (['origin', 'destination'].includes(event.target.name)) void refreshRoute();
+  });
+  void refreshRoute();
   bindForm(form, async values => {
     checkAddresses(values);
     try {

@@ -24,9 +24,12 @@ PORT=3000
 APP_ORIGIN=http://127.0.0.1:3000
 DB_PATH=backend/data/enjoytrip.sqlite
 COOKIE_SECURE=false
+KAKAO_MAP_JAVASCRIPT_KEY=발급받은_JavaScript_키
 ```
 
 `HOST`·`PORT`를 바꾸면 `APP_ORIGIN`도 맞춥니다. 운영 환경은 HTTPS와 `COOKIE_SECURE=true`가 필요합니다. 프런트엔드는 같은 서버의 상대 경로로 API를 호출합니다.
+
+게시글 작성·수정·조회 화면은 두 주소를 카카오 지도에서 직선 여행 경로로 표시합니다. 카카오 개발자 콘솔에서 **카카오맵 사용 설정**을 활성화하고 JavaScript 키의 웹 도메인에 실제 접속 주소(예: `http://localhost:3000`, `http://127.0.0.1:3000`)를 등록합니다. JavaScript 키는 브라우저 지도 SDK에 전달되는 공개 키이며, REST API 키를 입력하지 않습니다. 지도 설정이 없거나 주소 검색이 실패해도 게시글 작성·조회는 가능합니다.
 
 DB는 첫 실행 시 생성되며 기존 DB는 자동 변환합니다. DB 파일과 환경변수 파일은 Git에 포함하지 않습니다. 회원 테이블은 `members`이며 `isAdmin`은 0 또는 1, 가입 기본값은 0입니다.
 

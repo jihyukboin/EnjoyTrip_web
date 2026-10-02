@@ -7,6 +7,7 @@
     <!-- document-head -->
     <link rel="stylesheet" href="/css/components/form.css">
     <link rel="stylesheet" href="/css/components/post-write.css">
+    <link rel="stylesheet" href="/css/components/route-map.css">
     <script src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" defer></script>
   </head>
   <body>
@@ -34,6 +35,12 @@
                 <p id="post-destination-error" class="form-field__error"></p>
               </div>
             </div>
+            <section class="route-map" data-route-map hidden aria-label="비행 경로">
+              <h2 class="route-map__title">비행 경로</h2>
+              <p class="route-map__addresses" data-map-addresses></p>
+              <div class="route-map__canvas" data-map-canvas hidden aria-label="출발·도착 지도"></div>
+              <p class="route-map__status" data-map-status role="status"></p>
+            </section>
             <div class="form-field">
               <label for="post-content">본문 (선택)</label>
               <textarea id="post-content" name="content" maxlength="2000" rows="14" aria-describedby="post-content-error" placeholder="내용을 입력하세요 (선택)"></textarea>

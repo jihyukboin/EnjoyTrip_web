@@ -11,6 +11,19 @@ const password = 'example-only-passphrase-2026';
 const newPassword = 'another-example-passphrase-2026';
 const signup = { id: 'traveler', name: '여행자', password };
 
+test('지도 설정 API는 공개 JavaScript 키만 제공하고 미설정이면 503을 반환한다', async t => {
+  const missing = await fixture(t);
+  const unavailable = await missing.call('/api/maps/config');
+  assert.equal(unavailable.status, 503);
+  assert.equal(unavailable.json.error.code, 'MAP_NOT_CONFIGURED');
+  const configured = await fixture(t, { config: {
+    kakaoMapJavascriptKey: 'example-javascript-key', kakaoRestApiKey: 'must-not-be-exposed'
+  } });
+  const result = await configured.call('/api/maps/config');
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.json, { data: { javascriptKey: 'example-javascript-key' } });
+});
+
 async function fixture(t, options = {}) {
   const db = options.db ?? openDatabase(':memory:');
   const config = { origin: '', secureCookies: false, ...options.config };

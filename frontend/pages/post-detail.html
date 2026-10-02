@@ -7,15 +7,22 @@
     <!-- document-head -->
     <link rel="stylesheet" href="/css/components/form.css">
     <link rel="stylesheet" href="/css/components/post-detail.css">
+    <link rel="stylesheet" href="/css/components/route-map.css">
   </head>
   <body>
     <!-- site-header -->
+    <div class="route-map__canvas post-detail-map" data-detail-map hidden aria-label="출발·도착 지도"></div>
     <main>
       <article class="post-detail" data-post-detail aria-busy="true">
         <p class="post-detail__status" role="status">게시글을 불러오는 중입니다.</p>
         <div class="post-detail__body" hidden>
           <h1 class="post-detail__title"></h1>
           <p class="post-detail__meta"></p>
+          <section class="route-map" data-route-map hidden aria-label="비행 경로">
+            <h2 class="route-map__title">비행 경로</h2>
+            <p class="route-map__addresses" data-map-addresses></p>
+            <p class="route-map__status" data-map-status role="status"></p>
+          </section>
           <div class="post-detail__content"></div>
         </div>
         <div class="post-detail__actions">

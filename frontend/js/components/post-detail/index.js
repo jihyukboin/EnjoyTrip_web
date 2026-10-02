@@ -1,5 +1,6 @@
 // /post/detail?id= 게시글, /post/detail?notice= 공지사항을 불러와 보여준다
 import { getNotice, getPost } from '../../api/post-api.js';
+import { createRouteMap } from '../route-map/index.js';
 
 const dateFormat = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' });
 const ID = /^[1-9]\d{0,15}$/;
@@ -37,6 +38,12 @@ export async function initializePostDetail() {
       flightLink.hidden = false;
     }
     body.hidden = false;
+    if (item.type !== 'notice') {
+      if (item.origin && item.destination) document.body.classList.add('post-detail-page--map');
+      void createRouteMap(root.querySelector('[data-route-map]'), {
+        canvas: document.querySelector('[data-detail-map]')
+      })(item.origin, item.destination);
+    }
     status.textContent = '';
   } catch (error) {
     status.textContent = error.message;

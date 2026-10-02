@@ -40,6 +40,13 @@ export function createApiRouter({ config, members, auth, now = Date.now, rateLim
   add('/api/auth/temporary-password', 'POST', ['id'], async (body, token, response) => {
     sendJson(response, 200, { data: { temporaryPassword: await auth.issueTemporaryPassword(body) } });
   }, true);
+  // 지도 SDK에서 사용하는 공개 JavaScript 키만 전달한다. REST API 키는 사용하지 않는다.
+  add('/api/maps/config', 'GET', [], (body, token, response) => {
+    if (!config.kakaoMapJavascriptKey) {
+      throw new ApiError(503, 'MAP_NOT_CONFIGURED', '카카오 지도 설정이 필요합니다.');
+    }
+    sendJson(response, 200, { data: { javascriptKey: config.kakaoMapJavascriptKey } });
+  });
 
   for (const [path, methods] of extraRoutes) routes.set(path, methods);
 
