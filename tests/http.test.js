@@ -97,6 +97,26 @@ test('게시판 메뉴는 공통 헤더가 있는 /post 페이지로 이동한�
   assert.ok(!html.includes('data-nav-link'));
 });
 
+test('/post/detail는 게시글 상세 화면과 목록 링크를 제공한다', async () => {
+  const response = await fetch(origin + '/post/detail?id=1');
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.ok(html.includes('<header class="site-header">'));
+  assert.ok(html.includes('data-post-detail'));
+  assert.match(html, /href="\/post">목록<\/a>/);
+  assert.ok(html.includes('href="/css/components/post-detail.css"'));
+  assert.equal((await fetch(origin + '/css/components/post-detail.css')).status, 200);
+  assert.equal((await fetch(origin + '/js/components/post-detail/index.js')).status, 200);
+});
+
+test('/post/edit는 글쓰기와 같은 제출 폼을 제공한다', async () => {
+  const response = await fetch(origin + '/post/edit?id=1');
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.ok(html.includes('data-post-form'));
+  assert.match(html, /<textarea id="post-content" name="content"/);
+});
+
 test('/post/write는 제목·본문 입력란과 API 제출 폼을 제공한다', async () => {
   const response = await fetch(origin + '/post/write');
   const html = await response.text();

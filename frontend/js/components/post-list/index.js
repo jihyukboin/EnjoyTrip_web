@@ -1,50 +1,40 @@
-import { listPosts } from '../../api/post-api.js';
+import { getCurrentMember } from '../../api/member-api.js';
+import { deletePost, listPosts } from '../../api/post-api.js';
 import { renderPagination } from './pagination.js';
-
-const dateFormat = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' });
+import { renderPost } from './item.js';
 
 function readPage() {
   const value = new URLSearchParams(location.search).get('page');
   return /^[1-9]\d{0,5}$/.test(value ?? '') ? Number(value) : 1;
 }
 
-function renderPost(post) {
-  const item = document.createElement('li');
-  item.className = 'post-list__item';
-  const title = document.createElement('h3');
-  title.className = 'post-list__item-title';
-  title.textContent = post.title;
-  const content = document.createElement('p');
-  content.className = 'post-list__excerpt';
-  content.textContent = post.content;
-  const meta = document.createElement('p');
-  meta.className = 'post-list__meta';
-  const time = document.createElement('time');
-  time.dateTime = post.createdAt;
-  time.textContent = dateFormat.format(new Date(post.createdAt));
-  meta.append(`${post.author.name} · `, time);
-  item.append(title, content, meta);
-  return item;
-}
+// 비로그인·조회 실패 시 수정·삭제 버튼 없이 목록만 보여준다
+const currentMemberId = async () => {
+  try { return (await getCurrentMember())?.id ?? null; }
+  catch { return null; }
+};
 
-export function initializePostList() {
+export async function initializePostList() {
   const section = document.querySelector('[data-post-list]');
   if (!section) return;
   const list = section.querySelector('.post-list__items');
   const status = section.querySelector('.post-list__status');
   const nav = section.querySelector('.pagination');
+  const memberId = await currentMemberId();
 
   const load = async page => {
     section.setAttribute('aria-busy', 'true');
     try {
       const { posts, pagination } = await listPosts(page);
-      list.replaceChildren(...posts.map(renderPost));
+      list.replaceChildren(...posts.map(post => renderPost(post, memberId)));
       status.textContent = posts.length ? '' : '등록된 게시글이 없습니다.';
       renderPagination(nav, pagination);
+      return pagination;
     } catch (error) {
       list.replaceChildren();
       nav.hidden = true;
       status.textContent = error.message;
+      return null;
     } finally {
       section.removeAttribute('aria-busy');
     }
@@ -60,6 +50,31 @@ export function initializePostList() {
     section.scrollIntoView({ block: 'start' });
   });
   addEventListener('popstate', () => load(readPage()));
+
+  list.addEventListener('click', async event => {
+    const button = event.target.closest('button[data-delete-post]');
+    if (!button) return;
+    if (!confirm(`'${button.dataset.title}' 글을 삭제할까요?`)) return;
+    button.disabled = true;
+    let message = '게시글을 삭제했습니다.';
+    try {
+      await deletePost(button.dataset.deletePost);
+    } catch (error) {
+      if (error.code === 'UNAUTHENTICATED') {
+        location.assign('/login?returnTo=%2Fpost');
+        return;
+      }
+      message = error.message;
+    }
+    // 마지막 글을 지워 현재 페이지가 비면 마지막 페이지로 이동한다
+    const page = readPage();
+    const pagination = await load(page);
+    if (pagination && page > pagination.totalPages) {
+      history.replaceState(null, '', `?page=${pagination.totalPages}`);
+      await load(pagination.totalPages);
+    }
+    status.textContent = message;
+  });
 
   return load(readPage());
 }

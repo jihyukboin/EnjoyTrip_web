@@ -24,11 +24,3 @@ export function validateNotice(body) {
   if (Object.keys(fields).length) throw new ApiError(400, 'VALIDATION_ERROR', '입력값을 확인해주세요.', fields);
   return result;
 }
-
-export function validateEmpty(body) {
-  if (Object.keys(body).length) {
-    throw new ApiError(400, 'VALIDATION_ERROR', '입력값을 확인해주세요.',
-      Object.fromEntries(Object.keys(body).map(key => [key, '지원하지 않는 필드입니다.'])));
-  }
-  return {};
-}

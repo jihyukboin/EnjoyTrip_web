@@ -27,7 +27,10 @@
 | --- | --- | --- | --- |
 | POST | `/api/posts` | `title`, `content` | 201, `data.post` |
 | GET | `/api/posts?page=1` | `page`: 1 이상의 정수, 기본값 1 | 200, `data.posts`, `data.pagination` |
+| GET | `/api/posts/:id` | 없음 | 200, `data.post` |
+| PUT | `/api/posts/:id` | `title`, `content` | 200, `data.post` |
+| DELETE | `/api/posts/:id` | `{}` | 204 |
 
-등록에는 로그인이 필요하며 작성자는 세션에서 확인합니다. 제목은 1~100자, 본문은 1~2,000자입니다. 게시글은 `id`, `title`, `content`, `author`(`id`, `name`), `createdAt`을 반환합니다.
+등록·수정·삭제에는 로그인이 필요하며 작성자는 세션에서 확인합니다. 수정·삭제는 작성자 본인만 가능하며 다른 회원의 글은 403 `FORBIDDEN`, 없는 글은 404 `POST_NOT_FOUND`를 반환합니다. 제목은 1~100자, 본문은 1~2,000자입니다. 게시글은 `id`, `title`, `content`, `author`(`id`, `name`), `createdAt`을 반환합니다.
 
 목록은 최신순으로 20개씩 반환합니다. `pagination`은 `page`, `pageSize`, `total`, `totalPages`를 포함하며 마지막 페이지를 넘으면 빈 목록을 반환합니다.

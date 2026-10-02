@@ -9,6 +9,8 @@ const pages = new Map([
   ['/mypage', new URL('../../frontend/pages/mypage.html', import.meta.url)],
   ['/post', new URL('../../frontend/pages/post.html', import.meta.url)],
   ['/post/write', new URL('../../frontend/pages/post-write.html', import.meta.url)],
+  ['/post/detail', new URL('../../frontend/pages/post-detail.html', import.meta.url)],
+  ['/post/edit', new URL('../../frontend/pages/post-write.html', import.meta.url)],
   ['/admin', new URL('../../frontend/pages/admin.html', import.meta.url)],
   ['/admin/notice', new URL('../../frontend/pages/admin-notice.html', import.meta.url)]
 ]);

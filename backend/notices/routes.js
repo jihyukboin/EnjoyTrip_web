@@ -1,5 +1,6 @@
 import { sendJson } from '../http/api-response.js';
-import { validateEmpty, validateNotice } from './validation.js';
+import { validateEmpty } from '../http/json-body.js';
+import { validateNotice } from './validation.js';
 
 // 관리자 공지사항 등록·조회·수정·삭제. 변경 요청은 본문을 읽기 전에 관리자 권한을 확인한다.
 export function createNoticeRoutes({ notices }) {

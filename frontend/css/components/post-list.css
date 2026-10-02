@@ -64,6 +64,12 @@
   font-size: 13px;
 }
 
+.post-list__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .pagination {
   display: flex;
   flex-wrap: wrap;

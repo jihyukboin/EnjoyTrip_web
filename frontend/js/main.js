@@ -23,6 +23,11 @@ if (document.querySelector('[data-post-list]')) {
   await initializePostList();
 }
 
+if (document.querySelector('[data-post-detail]')) {
+  const { initializePostDetail } = await import('./components/post-detail/index.js');
+  await initializePostDetail();
+}
+
 if (document.querySelector('[data-admin-dashboard]')) {
   const { initializeAdmin } = await import('./components/admin/index.js');
   await initializeAdmin();

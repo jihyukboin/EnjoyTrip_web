@@ -54,3 +54,12 @@ export async function readJson(request) {
   }
   return body;
 }
+
+// 본문이 필요 없는 변경 요청(DELETE 등)은 빈 객체만 허용한다
+export function validateEmpty(body) {
+  if (Object.keys(body).length) {
+    throw new ApiError(400, 'VALIDATION_ERROR', '입력값을 확인해주세요.',
+      Object.fromEntries(Object.keys(body).map(key => [key, '지원하지 않는 필드입니다.'])));
+  }
+  return {};
+}
