@@ -229,3 +229,24 @@ test('버전 5 DB에 공지사항 테이블을 추가하고 기존 회원·게�
       .run('공지', 'a'.repeat(301), 1, 1));
   } finally { db.close(); }
 });
+
+test('버전 6 DB의 게시글에 시작점·도착점 열을 빈 값으로 추가한다', t => {
+  const directory = mkdtempSync(join(tmpdir(), 'enjoytrip-db-'));
+  const path = join(directory, 'version6.sqlite');
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const legacy = new DatabaseSync(path);
+  legacy.exec(readFileSync(new URL('../backend/db/schema.sql', import.meta.url), 'utf8'));
+  legacy.exec(postsSchema);
+  legacy.exec(readFileSync(new URL('../backend/db/notices-schema.sql', import.meta.url), 'utf8'));
+  legacy.exec('PRAGMA user_version = 6');
+  legacy.prepare('INSERT INTO members VALUES (?, ?, ?, ?, ?, ?, ?)').run(1, 'writer', '작성자', 'hash', 1, 2, 0);
+  legacy.prepare('INSERT INTO posts VALUES (?, ?, ?, ?, ?)').run(1, 1, '제목', '본문', 1);
+  legacy.close();
+  const db = openDatabase(path);
+  try {
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 8);
+    assert.deepEqual({ ...db.prepare('SELECT title, origin, destination FROM posts').get() },
+      { title: '제목', origin: '', destination: '' });
+    assert.throws(() => db.prepare('UPDATE posts SET origin = ? WHERE id = 1').run('가'.repeat(201)));
+  } finally { db.close(); }
+});

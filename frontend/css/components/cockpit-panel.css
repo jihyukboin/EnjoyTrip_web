@@ -1,0 +1,386 @@
+/* 계기판: 좌석(P1 핸들 · P2 페달), 키·핸들·페달 표시, 계기 화면 */
+.panel {
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+  background: linear-gradient(180deg, #121922 0%, #0b1016 38%, #07090d 100%);
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+  box-shadow: 0 -18px 40px rgb(0 0 0 / 0.55);
+}
+
+/* 글레어실드: 유리창 아래 가장자리를 덮는 차양 */
+.panel__hood {
+  position: absolute;
+  inset: -18px 0 auto;
+  height: 19px;
+  border-radius: 42% 42% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(180deg, #19212b, #121922);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+}
+
+.panel__deck {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 1fr);
+  gap: clamp(10px, 1.2vw, 16px);
+  height: 100%;
+  padding: 10px clamp(14px, 1.6vw, 22px) 16px;
+}
+
+.seat {
+  --seat-color: var(--ck-p1);
+
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  min-height: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--ck-line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #10161d, #0a0e13);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.seat--p2 {
+  --seat-color: var(--ck-p2);
+}
+
+.seat__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.seat__badge {
+  display: inline-grid;
+  place-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--seat-color) 18%, transparent);
+  color: var(--seat-color);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.seat__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.seat__role {
+  overflow: hidden;
+  color: var(--ck-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seat__body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+}
+
+.seat--p2 .seat__body {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* 조작부: 핸들·페달과 키 */
+.control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 0 4px;
+}
+
+.control__legend {
+  margin: 0;
+  color: var(--ck-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.yoke {
+  width: clamp(104px, 9.5vw, 148px);
+  height: auto;
+  overflow: visible;
+}
+
+.yoke__wheel {
+  transform: translateY(calc(var(--yoke-pitch, 0) * 6px)) scale(calc(1 + var(--yoke-pitch, 0) * 0.04)) rotate(calc(var(--yoke-roll, 0) * 32deg));
+  transform-origin: 0 0;
+  transition: transform 0.22s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+.yoke__frame {
+  fill: none;
+  stroke: #2a3541;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+.yoke__grip {
+  fill: #1c252f;
+  stroke: rgb(255 255 255 / 0.08);
+}
+
+.yoke__hub {
+  fill: #151c24;
+  stroke: rgb(255 255 255 / 0.1);
+}
+
+.yoke__mark {
+  fill: var(--seat-color);
+}
+
+.yoke__column {
+  fill: #0d1217;
+  stroke: rgb(255 255 255 / 0.05);
+}
+
+.keys {
+  display: grid;
+  gap: 4px;
+}
+
+.keys--wasd {
+  grid-template-columns: repeat(3, auto);
+  grid-template-areas: ". w ." "a s d";
+}
+
+.keys--wasd [data-key="KeyW"] { grid-area: w; }
+.keys--wasd [data-key="KeyA"] { grid-area: a; }
+.keys--wasd [data-key="KeyS"] { grid-area: s; }
+.keys--wasd [data-key="KeyD"] { grid-area: d; }
+
+.keys--arrows {
+  grid-template-rows: auto auto;
+  justify-items: center;
+}
+
+.key {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-bottom: 3px solid #05070a;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #1e2833, #151c25);
+  color: #b6c2ce;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  transition: translate 0.08s, background-color 0.08s, border-color 0.08s, box-shadow 0.12s, color 0.08s;
+}
+
+.key[data-pressed] {
+  border-color: var(--seat-color);
+  border-bottom-width: 1px;
+  background: color-mix(in srgb, var(--seat-color) 34%, #151c25);
+  color: #fff;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--seat-color) 55%, transparent);
+  translate: 0 2px;
+}
+
+.pedals {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.pedal {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.pedal__plate {
+  width: 44px;
+  height: clamp(52px, 8vh, 76px);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 9px 9px 13px 13px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 5px, rgb(0 0 0 / 0.35) 5px 7px),
+    linear-gradient(180deg, #222c38, #141b23);
+  box-shadow: 0 8px 14px rgb(0 0 0 / 0.45);
+  transform: perspective(260px) rotateX(16deg);
+  transform-origin: 50% 100%;
+  transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+
+.pedal--accel .pedal__plate {
+  width: 34px;
+  height: clamp(62px, 9.5vh, 90px);
+}
+
+.pedal[data-pressed] .pedal__plate {
+  border-color: var(--seat-color);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--seat-color) 50%, transparent), 0 3px 6px rgb(0 0 0 / 0.5);
+  transform: perspective(260px) rotateX(40deg) translateY(2px);
+}
+
+.pedal__label {
+  color: var(--ck-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pedal[data-pressed] .pedal__label {
+  color: var(--seat-color);
+}
+
+/* 계기 화면 */
+.display {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-evenly;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px 10px 6px;
+  border: 1px solid rgb(255 255 255 / 0.05);
+  border-radius: 14px;
+  background: radial-gradient(120% 120% at 50% 0%, #0a1016, var(--ck-screen));
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6), inset 0 12px 30px rgb(0 0 0 / 0.55);
+}
+
+.instrument {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+.instrument__svg {
+  height: 100%;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.instrument__svg--round {
+  aspect-ratio: 1;
+}
+
+.instrument__svg--tape {
+  aspect-ratio: 96 / 200;
+}
+
+.instrument__svg--bar {
+  aspect-ratio: 64 / 200;
+}
+
+.instrument__caption {
+  color: var(--ck-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.instrument__svg text {
+  font-weight: 700;
+}
+
+.instrument__svg .ink {
+  fill: none;
+  stroke: #e9eef3;
+  stroke-linecap: round;
+}
+
+.instrument__svg .ink-fill {
+  fill: #e9eef3;
+}
+
+.instrument__svg .ink-text {
+  fill: #c9d2db;
+  font-size: 10px;
+}
+
+.instrument__svg .value-box {
+  fill: #000;
+  stroke: rgb(255 255 255 / 0.55);
+  stroke-width: 1;
+}
+
+.instrument__svg .value {
+  fill: var(--ck-green);
+  font-size: 15px;
+}
+
+.instrument__svg .value[data-level="caution"] {
+  fill: var(--ck-amber);
+}
+
+.instrument__svg .value[data-level="warning"] {
+  fill: var(--ck-red);
+}
+
+.instrument__svg .target {
+  fill: var(--ck-cyan);
+  stroke: none;
+}
+
+.instrument__svg .bezel {
+  fill: #0a1016;
+  stroke: rgb(255 255 255 / 0.07);
+  stroke-width: 1;
+}
+
+.instrument__svg--tape {
+  mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
+}
+
+.attitude__aircraft {
+  fill: #ffcf3a;
+  stroke: #000;
+  stroke-width: 1;
+}
+
+.heading__ownship {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 0.8;
+}
+
+.instrument__svg .heading__cardinal {
+  fill: #fff;
+}
+
+.thrust__fill {
+  fill: var(--ck-green);
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yoke__wheel {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key,
+  .pedal__plate {
+    transition: none;
+  }
+}
+
+/* 좁은 화면에서는 조작부를 줄이고 계기 화면을 우선한다 */
+@media (max-width: 1100px) {
+  .control__legend {
+    display: none;
+  }
+
+  .seat__role {
+    display: none;
+  }
+}

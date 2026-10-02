@@ -1,0 +1,26 @@
+/* 조종석 유리창 너머의 Kakao 지도. 기둥·창틀에 가리지 않게 안쪽에 두어 지도 로고가 보이게 한다 */
+.flight-map {
+  position: absolute;
+  inset: 0 var(--pillar-foot) var(--sill);
+  z-index: 0;
+}
+
+.flight-map__status:empty {
+  display: none;
+}
+
+.flight-map__status {
+  position: absolute;
+  top: calc(50% + 120px);
+  left: 50%;
+  z-index: 5;
+  margin: 0;
+  padding: 8px 16px;
+  border: 1px solid color-mix(in srgb, var(--ck-amber) 45%, transparent);
+  border-radius: 999px;
+  background: rgb(10 8 4 / 0.7);
+  color: var(--ck-amber);
+  font-size: 13px;
+  text-align: center;
+  translate: -50% 0;
+}

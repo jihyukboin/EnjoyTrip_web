@@ -26,6 +26,7 @@ export function readConfig(env = process.env) {
       (databasePath.toLowerCase() === publicRoot || databasePath.toLowerCase().startsWith(publicRoot + sep))) {
     throw new Error('DB_PATH must be outside the public frontend directory.');
   }
-  const kakaoMapJavascriptKey = env.KAKAO_MAP_JAVASCRIPT_KEY?.trim() ?? '';
-  return { host, port, origin: originUrl.origin, databasePath, secureCookies, kakaoMapJavascriptKey };
+  const kakaoMapJavascriptKey = env.KAKAO_MAP_JAVASCRIPT_KEY?.trim() || env.KAKAO_MAP_KEY?.trim() || '';
+  const kakaoMapKey = kakaoMapJavascriptKey;
+  return { host, port, origin: originUrl.origin, databasePath, secureCookies, kakaoMapJavascriptKey, kakaoMapKey };
 }
