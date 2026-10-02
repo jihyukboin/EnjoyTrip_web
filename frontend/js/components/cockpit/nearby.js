@@ -38,7 +38,7 @@ function placeItem(place) {
   return { item, update: heading => setClock(clockPosition(place.bearing, heading)) };
 }
 
-export function createNearby(section) {
+export function createNearby(section, onVisiblePlaces = () => {}) {
   let places = [];
   let radar = createRadar(places);
   const radarHost = section.querySelector('[data-nearby-radar]');
@@ -58,10 +58,12 @@ export function createNearby(section) {
     selected = category;
     filters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.filter === category)));
     radar.filter(category);
-    items = places.filter(place => category === 'all' || place.category === category)
-      .slice(0, LIST_LIMIT).map(placeItem);
+    const visiblePlaces = places.filter(place => category === 'all' || place.category === category)
+      .slice(0, LIST_LIMIT);
+    items = visiblePlaces.map(placeItem);
     items.forEach(entry => entry.update(heading));
     list.replaceChildren(...items.map(entry => entry.item));
+    onVisiblePlaces(visiblePlaces);
     if (!items.length) list.append(element('li', 'mfd__empty', '반경 2km 안에 표시할 장소가 없습니다.'));
   }
 

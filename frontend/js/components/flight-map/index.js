@@ -10,6 +10,22 @@ export function initializeFlightMap(route) {
   let lastUpdate = 0;
   let position = route?.start ?? DEPARTURE;
   let failed = false;
+  let places = [];
+  let placePins = [];
+  const renderPlaces = () => {
+    placePins.forEach(pin => pin.setMap(null));
+    placePins = [];
+    if (!map) return;
+    for (const place of places) {
+      const point = new kakao.maps.LatLng(place.lat, place.lng);
+      const marker = new kakao.maps.Marker({ map, position: point, title: place.name });
+      const label = document.createElement('span');
+      label.className = 'flight-map__place';
+      label.textContent = place.name;
+      const overlay = new kakao.maps.CustomOverlay({ map, position: point, content: label, yAnchor: 2.6, zIndex: 2 });
+      placePins.push(marker, overlay);
+    }
+  };
   container.dataset.state = 'loading';
   status.textContent = '지도를 불러오는 중입니다.';
 
@@ -51,6 +67,7 @@ export function initializeFlightMap(route) {
             new kakao.maps.CustomOverlay({ map, position: point, content: label, yAnchor: 2.6, zIndex: 3 });
           });
         }
+        renderPlaces();
         container.dataset.state = 'ready';
         status.textContent = '';
         const resize = new ResizeObserver(() => {
@@ -68,6 +85,10 @@ export function initializeFlightMap(route) {
 
   return {
     isReady: () => Boolean(map),
+    setPlaces(visiblePlaces) {
+      places = visiblePlaces;
+      renderPlaces();
+    },
     update(state, now) {
       position = state.position;
       if (!map || now - lastUpdate < 1000 / 30) return;

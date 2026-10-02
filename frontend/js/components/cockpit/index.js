@@ -63,7 +63,7 @@ export async function initializeCockpit() {
     ...mount(cockpit.querySelector('[data-yoke]'), [createYoke()], 'prepend'),
     ...mount(cockpit.querySelector('[data-pfd]'), [createAttitude(), createHeading()]),
     ...mount(cockpit.querySelector('[data-engine]'), [createSpeed(), createThrust()]),
-    createNearby(cockpit.querySelector('[data-nearby]'))
+    createNearby(cockpit.querySelector('[data-nearby]'), map.setPlaces)
   ];
 
   let last = performance.now();
