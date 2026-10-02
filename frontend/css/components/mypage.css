@@ -41,54 +41,6 @@
   font-size: 15px;
 }
 
-.mypage__profile {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.mypage__profile p {
-  margin: 0;
-}
-
-.mypage__name {
-  color: #191f28;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.mypage__id {
-  color: #8b95a1;
-  font-size: 14px;
-}
-
-.mypage__details {
-  display: grid;
-  gap: 12px;
-  margin: 0;
-  padding-top: 20px;
-  border-top: 1px solid #f2f4f6;
-}
-
-.mypage__details div {
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
-  font-size: 15px;
-}
-
-.mypage__details dt {
-  color: #8b95a1;
-}
-
-.mypage__details dd {
-  margin: 0;
-  color: #333d4b;
-  font-weight: 500;
-  overflow-wrap: anywhere;
-  text-align: end;
-}
-
 .mypage__card--danger {
   box-shadow: 0 0 0 1px rgb(240 68 82 / 18%);
 }

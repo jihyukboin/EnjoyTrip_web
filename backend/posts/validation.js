@@ -1,0 +1,34 @@
+import { ApiError } from '../http/api-response.js';
+
+export function validatePost(body) {
+  const fields = {};
+  for (const key of Object.keys(body)) {
+    if (!['title', 'content'].includes(key)) fields[key] = '지원하지 않는 필드입니다.';
+  }
+  const result = {};
+  for (const [key, maximum] of [['title', 100], ['content', 2000]]) {
+    const value = body[key];
+    if (typeof value !== 'string' || !value.isWellFormed()) {
+      fields[key] = '올바른 문자열이 필요합니다.';
+      continue;
+    }
+    const trimmed = value.trim();
+    const controls = key === 'title' ? /\p{Cc}/u : /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u;
+    if (!trimmed || [...trimmed].length > maximum || controls.test(trimmed)) {
+      fields[key] = `${key === 'title' ? '제목' : '본문'}은 1~${maximum}자로 입력해주세요.`;
+    }
+    result[key] = trimmed;
+  }
+  if (Object.keys(fields).length) throw new ApiError(400, 'VALIDATION_ERROR', '입력값을 확인해주세요.', fields);
+  return result;
+}
+
+// ?page= 값이 없으면 1페이지, 있으면 1 이상의 정수만 허용한다
+export function validatePage(searchParams) {
+  const value = searchParams.get('page');
+  if (value === null) return 1;
+  if (!/^[1-9]\d{0,5}$/.test(value)) {
+    throw new ApiError(400, 'VALIDATION_ERROR', '입력값을 확인해주세요.', { page: '페이지는 1 이상의 정수여야 합니다.' });
+  }
+  return Number(value);
+}

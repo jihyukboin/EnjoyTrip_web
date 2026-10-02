@@ -6,6 +6,7 @@
     <title>게시판 | EnjoyTrip</title>
     <!-- document-head -->
     <link rel="stylesheet" href="/css/components/board-hero.css">
+    <link rel="stylesheet" href="/css/components/post-list.css">
   </head>
   <body>
     <!-- site-header -->
@@ -28,6 +29,12 @@
             </a>
           </div>
         </div>
+      </section>
+      <section class="post-list" aria-labelledby="post-list-title" data-post-list>
+        <h2 id="post-list-title" class="post-list__title">게시글</h2>
+        <p class="post-list__status" role="status">게시글을 불러오는 중입니다.</p>
+        <ol class="post-list__items"></ol>
+        <nav class="pagination" aria-label="게시글 페이지" hidden></nav>
       </section>
     </main>
   </body>

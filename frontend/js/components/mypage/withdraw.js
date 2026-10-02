@@ -1,6 +1,6 @@
 // 회원 탈퇴 확인 대화상자. 비밀번호를 다시 확인한 뒤 탈퇴한다.
 import { bindForm, resetForm } from '../form-controls.js';
-import { withdrawCurrentMember } from '../../mock/member-api.js';
+import { withdrawCurrentMember } from '../../api/member-api.js';
 
 const AFTER_WITHDRAW_PATH = '/';
 

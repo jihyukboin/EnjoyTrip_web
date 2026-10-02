@@ -115,6 +115,77 @@
   padding-block: 14px;
 }
 
+.site-header__account {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+
+.site-header__account-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #23242a;
+  cursor: pointer;
+}
+
+.site-header__account-toggle:hover {
+  color: #3182f6;
+}
+
+.site-header__account-panel {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  width: 160px;
+  padding: 5px;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(26 31 41 / 10%);
+}
+
+.site-header__account-panel[hidden] {
+  display: none;
+}
+
+.site-header__account-panel > a,
+.site-header__account-panel > button {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #23242a;
+  font: 500 14px/20px 'Pretendard Variable', system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.site-header__account-panel > a:hover,
+.site-header__account-panel > button:hover {
+  background: #f5f6f8;
+}
+
+.site-header__account-panel > button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.site-header__account-error {
+  margin: 4px 12px 8px;
+  color: #c83535;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
 .site-header__mobile-account .site-header__login {
   width: 100%;
   gap: 6px;
@@ -171,6 +242,9 @@
 }
 
 @media (max-width: 839px) {
+  .site-header__account {
+    margin-inline: 16px;
+  }
   .site-header--interactive .site-header__navigation,
   .site-header--interactive .site-header__desktop-login {
     display: none;

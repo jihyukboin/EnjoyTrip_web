@@ -1,0 +1,55 @@
+/* 공통 헤더 하단의 최신 공지: [확성기] [제목] [닫기] 한 줄 */
+.notice-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 4px 8px 4px 16px;
+  border-top: 1px solid rgb(49 130 246 / 14%);
+  background: #e8f3ff;
+  color: #1b3a63;
+}
+
+.notice-banner__icon {
+  flex-shrink: 0;
+  color: #3182f6;
+}
+
+/* 긴 제목은 한 줄에서 말줄임 처리한다 */
+.notice-banner__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notice-banner__close {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #4e5968;
+  cursor: pointer;
+  transition: background-color 150ms;
+}
+
+.notice-banner__close:hover {
+  background: rgb(49 130 246 / 12%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice-banner__close {
+    transition: none;
+  }
+}

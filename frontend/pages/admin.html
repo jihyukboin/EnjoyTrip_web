@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>관리자 페이지 | EnjoyTrip</title>
+    <!-- document-head -->
+    <link rel="stylesheet" href="/css/components/admin.css">
+  </head>
+  <body>
+    <!-- site-header -->
+    <main>
+      <div class="admin">
+        <!-- admin-nav -->
+        <section class="admin__dashboard" data-admin-dashboard>
+          <div class="admin__cards">
+            <section class="admin-card" aria-labelledby="admin-members-title">
+              <h1 id="admin-members-title" class="admin-card__title">회원 현황</h1>
+              <div class="admin-card__metrics" role="list">
+                <article class="admin-card__metric" role="listitem">
+                  <span class="admin-card__label">총 회원</span>
+                  <strong class="admin-card__value" data-metric="members.total">-</strong>
+                </article>
+                <article class="admin-card__metric" role="listitem">
+                  <span class="admin-card__label">오늘 가입자</span>
+                  <strong class="admin-card__value" data-metric="members.today">-</strong>
+                </article>
+                <article class="admin-card__metric" role="listitem">
+                  <span class="admin-card__label">로그인 중</span>
+                  <strong class="admin-card__value" data-metric="members.active">-</strong>
+                </article>
+              </div>
+            </section>
+            <section class="admin-card" aria-labelledby="admin-posts-title">
+              <h2 id="admin-posts-title" class="admin-card__title">게시글 현황</h2>
+              <div class="admin-card__metrics" role="list">
+                <article class="admin-card__metric" role="listitem">
+                  <span class="admin-card__label">총 게시글</span>
+                  <strong class="admin-card__value" data-metric="posts.total">-</strong>
+                </article>
+                <article class="admin-card__metric" role="listitem">
+                  <span class="admin-card__label">이번 달</span>
+                  <strong class="admin-card__value" data-metric="posts.month">-</strong>
+                </article>
+                <article class="admin-card__metric" role="listitem">
+                  <span class="admin-card__label">오늘</span>
+                  <strong class="admin-card__value" data-metric="posts.today">-</strong>
+                </article>
+              </div>
+            </section>
+          </div>
+          <p class="admin__status" role="status">대시보드를 불러오는 중입니다.</p>
+          <div class="admin-table">
+            <table aria-label="회원 목록">
+              <thead>
+                <tr>
+                  <th scope="col">아이디</th>
+                  <th scope="col">이름</th>
+                  <th scope="col">권한</th>
+                  <th scope="col">게시글</th>
+                  <th scope="col">가입일</th>
+                </tr>
+              </thead>
+              <tbody data-admin-members></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

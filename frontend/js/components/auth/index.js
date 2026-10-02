@@ -1,9 +1,13 @@
 // /login: 로그인, 회원가입, 비밀번호 찾기, 로그인 상태에서의 로그아웃
 import { bindForm, showStatus } from '../form-controls.js';
-import { getCurrentMember, issueTemporaryPassword, logIn, logOut, signUp } from '../../mock/member-api.js';
+import { getCurrentMember, issueTemporaryPassword, logIn, logOut, signUp } from '../../api/member-api.js';
 import { createAuthViews, guestViewFromHash } from './views.js';
+import { showLoginLink } from '../site-header.js';
 
-const AFTER_LOGIN_PATH = '/mypage';
+// 로그인 후 돌아갈 수 있는 경로만 허용한다
+const RETURN_PATHS = new Set(['/post/write', '/admin', '/admin/notice']);
+const requestedPath = new URLSearchParams(location.search).get('returnTo');
+const AFTER_LOGIN_PATH = RETURN_PATHS.has(requestedPath) ? requestedPath : '/mypage';
 
 function renderAccount(view, member) {
   view.querySelector('[data-account-avatar]').textContent = [...member.name][0] ?? '';
@@ -21,8 +25,8 @@ function bindGuestForms(views) {
     location.assign(AFTER_LOGIN_PATH);
   });
 
-  bindForm(views.get('signup').querySelector('form'), async ({ id, password, name, email }) => {
-    await signUp({ id, password, name: name.trim(), email });
+  bindForm(views.get('signup').querySelector('form'), async ({ id, password, name }) => {
+    await signUp({ id, password, name: name.trim() });
     // hashchange를 발생시키지 않고 주소만 바꿔 아래에서 지정한 포커스를 유지한다
     history.pushState(null, '', '#login');
     views.show('login', { focus: false });
@@ -33,6 +37,8 @@ function bindGuestForms(views) {
 
   bindForm(findView.querySelector('form'), async ({ id }) => {
     const result = findView.querySelector('[data-temporary-password-result]');
+    result.hidden = true;
+    findView.querySelector('[data-temporary-password]').textContent = '';
     findView.querySelector('[data-temporary-password]').textContent = await issueTemporaryPassword({ id });
     result.hidden = false;
     result.querySelector('a').focus();
@@ -66,6 +72,7 @@ export async function initializeAuth() {
   bindGuestForms(views);
   bindLogout(views, () => {
     loggedIn = false;
+    showLoginLink();
     history.replaceState(null, '', location.pathname);
     views.show('login');
     showStatus(views.get('login').querySelector('.form-status'), '로그아웃되었습니다.', 'success');
@@ -74,7 +81,14 @@ export async function initializeAuth() {
     if (!loggedIn) views.show(guestViewFromHash(location.hash));
   });
 
-  const member = await getCurrentMember();
+  let member;
+  try { member = await getCurrentMember(); }
+  catch (error) {
+    views.show('login', { focus: false });
+    showStatus(views.get('login').querySelector('.form-status'), error.message);
+    root.hidden = false;
+    return;
+  }
   loggedIn = Boolean(member);
   if (member) renderAccount(views.get('account'), member);
   views.show(member ? 'account' : guestViewFromHash(location.hash), { focus: false });

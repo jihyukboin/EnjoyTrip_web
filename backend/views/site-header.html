@@ -7,8 +7,12 @@
     <nav class="site-header__navigation" aria-label="메뉴 바">
       <a href="/" data-nav-link="/">홈</a>
       <a href="/post" data-nav-link="/post">게시판</a>
+      <!-- admin-link -->
     </nav>
-    <a class="site-header__login site-header__desktop-login" href="/login">로그인</a>
+    <!-- guest-account-start -->
+    <a class="site-header__login site-header__desktop-login" href="{{account-href}}">{{account-label}}</a>
+    <!-- guest-account-end -->
+    <!-- account-menu -->
     <button class="site-header__toggle" type="button" hidden
       aria-label="모바일 메뉴 열기" aria-expanded="false" aria-controls="site-mobile-menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -19,17 +23,21 @@
     </button>
   </div>
   <nav id="site-mobile-menu" class="site-header__mobile-menu" aria-label="모바일 메뉴" hidden>
+    <!-- guest-account-start -->
     <div class="site-header__mobile-account">
-      <a class="site-header__login" href="/login">
+      <a class="site-header__login" href="{{account-href}}">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="8" r="5" />
           <path d="M20 21a8 8 0 0 0-16 0" />
         </svg>
-        로그인
+        <span data-account-label>{{account-label}}</span>
       </a>
     </div>
+    <!-- guest-account-end -->
     <a href="/" data-nav-link="/">홈</a>
     <a href="/post" data-nav-link="/post">게시판</a>
+    <!-- admin-link -->
   </nav>
+  <!-- notice-banner -->
 </header>

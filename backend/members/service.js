@@ -5,20 +5,26 @@ import { publicMember } from './repository.js';
 
 export function createMemberService({ db, members, authService, now = Date.now }) {
   return {
-    async register({ email, name, password }) {
+    async register({ id, name, password }) {
       const hash = await hashPassword(password);
-      try { return publicMember(members.create(email, name, hash, now())); }
+      try { return publicMember(members.create(id, name, hash, now())); }
       catch (error) {
         if (error.code === 'ERR_SQLITE_ERROR' && error.errcode === 2067) {
-          throw new ApiError(409, 'EMAIL_ALREADY_EXISTS', '이미 가입된 이메일입니다.');
+          throw new ApiError(409, 'ID_ALREADY_EXISTS', '이미 사용 중인 아이디입니다.', { id: '이미 사용 중인 아이디입니다.' });
         }
         throw error;
       }
     },
     me(token) { return publicMember(authService.authenticate(token)); },
-    rename(token, { name }) {
+    async update(token, { name, password }) {
       const member = authService.authenticate(token);
-      return publicMember(members.rename(member.id, name, now()));
+      const hash = password ? await hashPassword(password) : null;
+      return transaction(db, () => {
+        const current = authService.revalidate(token, member);
+        const updated = members.update(member.id, name ?? current.name, hash ?? current.password_hash, now());
+        if (hash) authService.revokeOtherSessions(token, member.id);
+        return publicMember(updated);
+      });
     },
     async remove(token, { currentPassword }) {
       const member = authService.authenticate(token);
