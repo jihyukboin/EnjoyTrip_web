@@ -5,9 +5,10 @@ import { createAuthViews, guestViewFromHash } from './views.js';
 import { showLoginLink } from '../site-header.js';
 
 // 로그인 후 돌아갈 수 있는 경로만 허용한다
-const RETURN_PATHS = new Set(['/post/write', '/admin', '/admin/notice']);
-const requestedPath = new URLSearchParams(location.search).get('returnTo');
-const AFTER_LOGIN_PATH = RETURN_PATHS.has(requestedPath) ? requestedPath : '/mypage';
+const RETURN_PATHS = new Set(['/post', '/post/write', '/admin', '/admin/notice']);
+const EDIT_PATH = /^\/post\/edit\?id=[1-9]\d{0,15}$/;
+const requestedPath = new URLSearchParams(location.search).get('returnTo') ?? '';
+const AFTER_LOGIN_PATH = RETURN_PATHS.has(requestedPath) || EDIT_PATH.test(requestedPath) ? requestedPath : '/mypage';
 
 function renderAccount(view, member) {
   view.querySelector('[data-account-avatar]').textContent = [...member.name][0] ?? '';

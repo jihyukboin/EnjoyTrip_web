@@ -1,5 +1,11 @@
 * {
   box-sizing: border-box;
+  scrollbar-color: rgba(0, 29, 58, 0.18) transparent;
+  scrollbar-width: thin;
+}
+
+html {
+  scrollbar-gutter: stable;
 }
 
 body {

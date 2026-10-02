@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>게시글 | EnjoyTrip</title>
+    <!-- document-head -->
+    <link rel="stylesheet" href="/css/components/form.css">
+    <link rel="stylesheet" href="/css/components/post-detail.css">
+  </head>
+  <body>
+    <!-- site-header -->
+    <main>
+      <article class="post-detail" data-post-detail aria-busy="true">
+        <p class="post-detail__status" role="status">게시글을 불러오는 중입니다.</p>
+        <div class="post-detail__body" hidden>
+          <h1 class="post-detail__title"></h1>
+          <p class="post-detail__meta"></p>
+          <div class="post-detail__content"></div>
+        </div>
+        <div class="post-detail__actions">
+          <a class="button button--secondary" href="/post">목록</a>
+        </div>
+      </article>
+    </main>
+  </body>
+</html>

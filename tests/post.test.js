@@ -8,7 +8,8 @@ import { createApi } from '../backend/api.js';
 import { createRequestHandler } from '../backend/app.js';
 import { openDatabase } from '../backend/db/database.js';
 import { SESSION_MS } from '../backend/auth/tokens.js';
-import { createPost, listPosts } from '../frontend/js/api/post-api.js';
+import { createPost, deletePost, getNotice, getPost, listPosts, updatePost } from '../frontend/js/api/post-api.js';
+import { request } from '../frontend/js/api/client.js';
 import { logIn, signUp, logOut } from '../frontend/js/api/member-api.js';
 
 async function fixture(t, options = {}) {
@@ -121,10 +122,68 @@ test('게시글 목록은 최신 글부터 20개씩 나누고 잘못된 페이�
   assert.equal(mixed.posts[0].title, '여행 안내');
   assert.equal(mixed.posts[0].content, '안내 내용');
   assert.equal(mixed.posts[0].author.name, '공지사항');
+  assert.equal(mixed.posts[0].type, 'notice');
+  assert.equal(mixed.posts[1].type, 'post');
   assert.equal(mixed.posts[1].title, '글 21');
   assert.equal(mixed.pagination.total, 42);
   assert.deepEqual((await listPosts(3)).posts.map(post => post.title), ['글 2', '글 1']);
   for (const page of ['0', '-1', '1.5', 'abc', '']) {
     await assert.rejects(listPosts(page), error => error.status === 400 && error.field === 'page');
+  }
+});
+
+test('게시글 상세·수정·삭제는 작성자 본인만 변경할 수 있고 없는 글은 404를 반환한다', async t => {
+  const api = await fixture(t);
+  await assert.rejects(getPost(1), error => error.status === 404 && error.code === 'POST_NOT_FOUND');
+  await api.register();
+  const post = await createPost({ title: '원래 제목', content: '원래 본문' });
+  assert.deepEqual(await getPost(post.id), { ...post, author: { id: 'writer', name: '작성자' } });
+
+  const updated = await updatePost(post.id, { title: '  바뀐 제목 ', content: '바뀐\n본문' });
+  assert.deepEqual(updated, { ...post, title: '바뀐 제목', content: '바뀐\n본문', author: { id: 'writer', name: '작성자' } });
+  assert.equal(api.db.prepare('SELECT title FROM posts WHERE id = ?').get(post.id).title, '바뀐 제목');
+  await assert.rejects(updatePost(post.id, { title: ' ', content: '본문' }), error => error.status === 400 && error.field === 'title');
+  await assert.rejects(updatePost(999, { title: '제목', content: '본문' }), error => error.status === 404);
+  await assert.rejects(deletePost(999), error => error.status === 404);
+
+  // 다른 회원은 수정·삭제할 수 없다
+  await logOut();
+  await signUp({ id: 'other', name: '다른회원', password: 'password1' });
+  await logIn({ id: 'other', password: 'password1' });
+  await assert.rejects(updatePost(post.id, { title: '탈취', content: '탈취' }), error => error.status === 403 && error.code === 'FORBIDDEN');
+  await assert.rejects(deletePost(post.id), error => error.status === 403);
+  assert.equal(api.db.prepare('SELECT title FROM posts WHERE id = ?').get(post.id).title, '바뀐 제목');
+
+  // 비로그인은 401, 삭제 본문에 필드가 있으면 400
+  await logOut();
+  await assert.rejects(updatePost(post.id, { title: '제목', content: '본문' }), error => error.status === 401);
+  await assert.rejects(deletePost(post.id), error => error.status === 401);
+  await logIn({ id: 'writer', password: 'password1' });
+  await assert.rejects(request(`/api/posts/${post.id}`, { method: 'DELETE', body: { force: true } }),
+    error => error.status === 400 && error.field === 'force');
+
+  assert.equal(await deletePost(post.id), undefined);
+  assert.equal(api.db.prepare('SELECT count(*) AS n FROM posts').get().n, 0);
+  await assert.rejects(getPost(post.id), error => error.status === 404);
+});
+
+test('로그인 없이 게시글 목록·게시글 상세·공지 상세와 해당 페이지를 조회할 수 있다', async t => {
+  const api = await fixture(t);
+  await api.register();
+  const post = await createPost({ title: '공개 글', content: '공개 본문' });
+  const noticeId = Number(api.db.prepare('INSERT INTO notices(title, content, created_at, updated_at) VALUES (?, ?, ?, ?)')
+    .run('공개 공지', '공지 본문', 1_000, 1_000).lastInsertRowid);
+  await logOut();
+
+  const { posts } = await listPosts();
+  assert.deepEqual(posts.map(item => [item.type, item.title]), [['post', '공개 글'], ['notice', '공개 공지']]);
+  assert.equal((await getPost(post.id)).content, '공개 본문');
+  assert.equal((await getNotice(noticeId)).content, '공지 본문');
+
+  // 세션 쿠키 없이 페이지가 리다이렉트 없이 열린다
+  for (const path of ['/post', `/post/detail?id=${post.id}`, `/post/detail?notice=${noticeId}`]) {
+    const response = await globalThis.fetch(path, { redirect: 'manual', headers: {} });
+    assert.equal(response.status, 200, path);
+    assert.ok((await response.text()).includes('<header class="site-header">'), path);
   }
 });

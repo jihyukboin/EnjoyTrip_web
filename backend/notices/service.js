@@ -10,6 +10,12 @@ export function createNoticeService({ notices, auth, now = Date.now }) {
       requireAdmin(auth, token);
       return notices.list();
     },
+    // 공지 상세는 로그인 없이 조회할 수 있다
+    get(id) {
+      const notice = notices.byId(id);
+      if (!notice) throw notFound();
+      return notice;
+    },
     create: body => notices.create(body, now()),
     update(id, body) {
       const notice = notices.update(id, body, now());
